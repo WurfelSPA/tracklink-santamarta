@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS Fleet Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Epilogue:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ── CONFIG BANNER ── */
+#configBanner {
+  background: #1a1200; border-bottom: 2px solid #f5a623;
+  padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+#configBanner .cb-text { font-size: 13px; color: #f5a623; font-family: 'Space Mono', monospace; }
+#configBanner .cb-sub  { font-size: 11px; color: #8b6c1a; margin-top: 3px; }
+#configInput {
+  flex: 1; max-width: 520px; background: #0d0a00; border: 1px solid #f5a623;
+  border-radius: 6px; padding: 8px 12px; color: #f5d27a; font-size: 12px;
+  font-family: 'Space Mono', monospace; outline: none;
+}
+#configInput::placeholder { color: #5a4a1a; }
+#configApply {
+  background: #f5a623; color: #0d0a00; border: none; border-radius: 6px;
+  padding: 9px 18px; font-weight: 700; font-size: 12px; cursor: pointer;
+  font-family: 'Epilogue', sans-serif; white-space: nowrap;
+}
+#configApply:hover { background: #ffc44d; }
+
+/* ── LOADING SCREEN ── */
+#loadingScreen {
+  position: fixed; inset: 0; background: #0d0f14; z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}
+#loadingScreen.hidden { display: none; }
+.loader-ring {
+  width: 48px; height: 48px; border: 3px solid rgba(184,245,58,0.15);
+  border-top-color: #b8f53a; border-radius: 50%; animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loadMsg { font-family: 'Space Mono', monospace; font-size: 13px; color: #5e6480; }
+#loadError { font-family: 'Space Mono', monospace; font-size: 12px; color: #f04545; max-width: 500px; text-align: center; display: none; }
+#loadRetry { display: none; background: #f04545; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-weight: 700; cursor: pointer; font-family: 'Epilogue', sans-serif; font-size: 13px; }
+
+/* ── CORE THEME ── */
+:root {
+  --ink:        #0d0f14;
+  --ink2:       #161920;
+  --ink3:       #1e2230;
+  --line:       rgba(255,255,255,0.06);
+  --line2:      rgba(255,255,255,0.10);
+  --text:       #e9eaf2;
+  --muted:      #5e6480;
+  --muted2:     #8b90a8;
+  --lime:       #b8f53a;
+  --lime-dim:   rgba(184,245,58,0.10);
+  --amber:      #f5a623;
+  --amber-dim:  rgba(245,166,35,0.10);
+  --red:        #f04545;
+  --red-dim:    rgba(240,69,69,0.10);
+  --blue:       #5b9cf6;
+  --blue-dim:   rgba(91,156,246,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Epilogue',sans-serif;background:var(--ink);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* TOPBAR */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:54px;background:var(--ink2);
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:200;
+}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:30px;height:30px;border-radius:7px;background:var(--lime);display:flex;align-items:center;justify-content:center;}
+.brand-mark svg{width:16px;height:16px;}
+.brand-name{font-size:15px;font-weight:800;letter-spacing:-.4px;}
+.brand-name span{color:var(--lime);}
+.client-pill{background:var(--lime-dim);border:1px solid rgba(184,245,58,.2);color:var(--lime);font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;font-family:'Space Mono',monospace;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.period-badge{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);background:var(--ink3);border:1px solid var(--line2);padding:5px 12px;border-radius:6px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--lime);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* TABS */
+.nav-tabs{display:flex;gap:2px;padding:14px 28px 0;background:var(--ink2);border-bottom:1px solid var(--line);}
+.tab-btn{font-family:'Epilogue',sans-serif;font-size:13px;font-weight:600;padding:9px 18px;border:none;background:transparent;color:var(--muted2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--lime);border-bottom-color:var(--lime);}
+
+/* MAIN */
+.main{padding:24px 28px;display:flex;flex-direction:column;gap:20px;max-width:1380px;margin:0 auto;width:100%;}
+
+/* SEC LABEL */
+.sec-label{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--line);}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.kpi{background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,#b8f53a);opacity:.5;}
+.kpi-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px;}
+.kpi-value{font-size:28px;font-weight:900;line-height:1;color:var(--kv,var(--text));font-family:'Space Mono',monospace;}
+.kpi-sub{font-size:11px;color:var(--muted2);margin-top:5px;font-family:'Space Mono',monospace;}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* CARD */
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+.card-title{font-size:13px;font-weight:700;color:var(--text);}
+.card-sub{font-size:11px;color:var(--muted2);margin-bottom:14px;}
+.card-tag{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;}
+.tag-red{background:var(--red-dim);color:var(--red);}
+.tag-lime{background:var(--lime-dim);color:var(--lime);}
+.tag-amber{background:var(--amber-dim);color:var(--amber);}
+
+/* CHART WRAP */
+.cw{position:relative;width:100%;}
+canvas{display:block;}
+
+/* METRICS */
+.metric-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.metric-label{font-size:12px;color:var(--muted2);width:130px;flex-shrink:0;}
+.metric-track{flex:1;height:7px;background:var(--ink3);border-radius:4px;overflow:hidden;}
+.metric-fill{height:100%;border-radius:4px;}
+.metric-val{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);width:44px;text-align:right;flex-shrink:0;}
+
+/* RANK TABLE */
+.rank-table{width:100%;border-collapse:collapse;}
+.rank-table th{text-align:left;padding:7px 10px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;border-bottom:1px solid var(--line);font-family:'Space Mono',monospace;}
+.rank-table td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+.rank-table tr:last-child td{border-bottom:none;}
+.rank-table tr:hover td{background:rgba(255,255,255,.015);}
+.rank-num{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;}
+.r1{background:var(--red-dim);color:var(--red);}
+.r2{background:var(--amber-dim);color:var(--amber);}
+.r3{background:var(--lime-dim);color:var(--lime);}
+.mono-sm{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);}
+
+/* DETAIL TABLE */
+.dtl-table{width:100%;border-collapse:collapse;font-size:12px;}
+.dtl-table th{text-align:left;padding:7px 10px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;border-bottom:1px solid var(--line);font-family:'Space Mono',monospace;}
+.dtl-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;}
+.dtl-table tr:last-child td{border-bottom:none;}
+.dtl-table tr:hover td{background:rgba(255,255,255,.012);}
+.vel-bar-wrap{display:flex;align-items:center;gap:6px;}
+
+/* TAB VIEWS */
+.tab-view{display:none;}
+.tab-view.active{display:block;}
+
+/* SELECTOR BUTTONS */
+.sel-btn{padding:9px 16px;border:1px solid var(--line2);border-radius:8px;background:transparent;color:var(--muted2);font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;font-weight:700;transition:all .15s;}
+.sel-btn.active{background:var(--lime-dim);color:var(--lime);border-color:rgba(184,245,58,.3);}
+.sel-btn:hover:not(.active){border-color:var(--line2);color:var(--text);}
+
+/* SEARCH */
+.search-input{background:var(--ink3);border:1px solid var(--line2);border-radius:6px;padding:6px 12px;color:var(--text);font-size:12px;font-family:'Epilogue',sans-serif;outline:none;width:220px;}
+.search-input:focus{border-color:var(--lime);}
+
+/* FOOTER */
+.footer{text-align:center;padding:18px 28px;color:var(--muted);font-size:11px;font-family:'Space Mono',monospace;border-top:1px solid var(--line);}
+
+@media(max-width:1100px){
+  .kpi-row{grid-template-columns:repeat(3,1fr);}
+  .grid2,.grid3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- CONFIG BANNER -->
+<div id="configBanner">
+  <div>
+    <div class="cb-text">📂 Ruta del archivo Excel</div>
+    <div class="cb-sub">URL pública del archivo .xlsx en GitHub (raw) — se carga directamente en el navegador</div>
+  </div>
+  <input id="configInput" type="text" placeholder="https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/data/INFORME_EXCESOS_DE_VELOCIDAD.xlsx">
+  <button id="configApply" onclick="applyConfig()">Cargar datos ▶</button>
+</div>
+
+<!-- LOADING -->
+<div id="loadingScreen" class="hidden">
+  <div class="loader-ring"></div>
+  <div id="loadMsg">Leyendo archivo Excel…</div>
+  <div id="loadError"></div>
+  <button id="loadRetry" onclick="retryLoad()">Reintentar</button>
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar" id="appTopbar" style="display:none;">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 18 18" fill="none"><path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#0d0f14" stroke-width="1.5" fill="#0d0f14"/><circle cx="9" cy="9" r="2.5" fill="#b8f53a"/></svg>
+    </div>
+    <span class="brand-name">GPS<span>Monitor</span></span>
+    <span class="client-pill" id="clientLabel">CARGANDO</span>
+  </div>
+  <div class="topbar-right">
+    <span class="period-badge" id="periodLabel">—</span>
+    <div class="live-dot"></div>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="nav-tabs" id="appTabs" style="display:none;">
+  <button class="tab-btn active" onclick="showTab('flota',this)">Vista General</button>
+  <button class="tab-btn" onclick="showTab('conductor',this)">Por Conductor</button>
+  <button class="tab-btn" onclick="showTab('vehiculo',this)">Por Vehículo</button>
+  <button class="tab-btn" onclick="showTab('detalle',this)">Detalle de Eventos</button>
+</nav>
+
+<!-- VIEWS -->
+<div id="tab-flota"     class="tab-view active"></div>
+<div id="tab-conductor" class="tab-view"></div>
+<div id="tab-vehiculo"  class="tab-view"></div>
+<div id="tab-detalle"   class="tab-view"></div>
+
+<footer class="footer" id="appFooter" style="display:none;">
+  GPS Monitor · <span id="footerText"></span>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIGURACIÓN — cambia este valor para cada cliente
+// ══════════════════════════════════════════════════════
+const DEFAULT_EXCEL_URL = 'https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/data/INFORME_EXCESOS_DE_VELOCIDAD.xlsx';
+const CLIENT_NAME       = 'SANTA MARTA';  // nombre que aparece en el badge
+
+// ══════════════════════════════════════════════════════
+// COLORES por conductor (se asignan automáticamente)
+// ══════════════════════════════════════════════════════
+const PALETTE = ['#b8f53a','#f5a623','#5b9cf6','#a78bfa','#f04545','#22d3e0','#fb7185'];
+
+// ══════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ══════════════════════════════════════════════════════
+let G = { rows:[], conductores:{}, vehiculos:{}, meta:{}, colors:{} };
+let activeCharts = {};
+let currentExcelUrl = DEFAULT_EXCEL_URL;
+
+// ══════════════════════════════════════════════════════
+// INIT — detectar URL desde query param o usar default
+// ══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const urlParam = params.get('excel');
+  if (urlParam) {
+    currentExcelUrl = urlParam;
+    document.getElementById('configInput').value = urlParam;
+    loadExcel(currentExcelUrl);
+  } else {
+    // Pre-fill input with default URL
+    document.getElementById('configInput').value = DEFAULT_EXCEL_URL;
+    // If default looks real (not placeholder), auto-load
+    if (!DEFAULT_EXCEL_URL.includes('TU_USUARIO')) {
+      loadExcel(DEFAULT_EXCEL_URL);
+    }
+  }
+  document.getElementById('clientLabel').textContent = CLIENT_NAME;
+});
+
+function applyConfig() {
+  const url = document.getElementById('configInput').value.trim();
+  if (!url) return;
+  currentExcelUrl = url;
+  loadExcel(url);
+}
+
+function retryLoad() { loadExcel(currentExcelUrl); }
+
+// ══════════════════════════════════════════════════════
+// LOAD EXCEL
+// ══════════════════════════════════════════════════════
+async function loadExcel(url) {
+  showLoading('Descargando archivo Excel…');
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} — verifica que la URL sea de tipo "raw" y que el archivo exista.`);
+    setLoadMsg('Procesando datos…');
+    const buf  = await resp.arrayBuffer();
+    const wb   = XLSX.read(buf, { type:'array', cellDates:true });
+    parseWorkbook(wb);
+    renderApp();
+    hideLoading();
+  } catch(e) {
+    showLoadError(e.message || String(e));
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// PARSE — reads Detalle 1 & Resumen 1 dynamically
+// ══════════════════════════════════════════════════════
+function parseWorkbook(wb) {
+  // --- Detalle 1 (header on row 5 = index 4) ---
+  const wsD = wb.Sheets['Detalle 1'];
+  const rawD = XLSX.utils.sheet_to_json(wsD, { header:1, raw:false, dateNF:'yyyy/mm/dd hh:mm:ss' });
+
+  // Find header row
+  let hdrIdx = rawD.findIndex(r => r.some(c => c && String(c).trim() === 'Alias'));
+  if (hdrIdx < 0) hdrIdx = 4;
+  const headers = rawD[hdrIdx];
+  const colidx = (name) => headers.findIndex(h => h && String(h).trim() === name);
+
+  const iAlias   = colidx('Alias');
+  const iCond    = colidx('Conductor');
+  const iFecha   = colidx('Fecha de Inicio');
+  const iDirIni  = colidx('Dirección de Inicio');
+  const iTiempo  = colidx('Tiempo');
+  const iVMax    = colidx('Velocidad Máxima (Km/h)');
+  const iVProm   = colidx('Velocidad Promedio (Km/h)');
+
+  G.rows = [];
+  for (let i = hdrIdx + 1; i < rawD.length; i++) {
+    const r = rawD[i];
+    if (!r[iAlias]) continue;
+    const fechaStr = r[iFecha] ? String(r[iFecha]) : '';
+    const dt = new Date(fechaStr);
+    G.rows.push({
+      alias:  String(r[iAlias]  || '').trim(),
+      cond:   titleCase(String(r[iCond]   || '').trim()),
+      fecha:  isNaN(dt) ? null : dt,
+      hora:   isNaN(dt) ? -1   : dt.getHours(),
+      dia:    isNaN(dt) ? -1   : dt.getDay(), // 0=Sun
+      dirIni: limpiarDir(String(r[iDirIni] || '')),
+      tiempo: String(r[iTiempo] || ''),
+      velMax: parseFloat(r[iVMax])  || 0,
+      velProm:parseFloat(r[iVProm]) || 0,
+    });
+  }
+
+  // --- Resumen 1 ---
+  const wsR = wb.Sheets['Resumen 1'];
+  const rawR = XLSX.utils.sheet_to_json(wsR, { header:1 });
+  // Extract period from row 2
+  const periodoRow = rawR.find(r => r.some(c => c && String(c).includes('Desde')));
+  if (periodoRow) {
+    const txt = periodoRow.join(' ');
+    const m = txt.match(/Desde\s*:\s*(\S+)\s+\S+\s+Hasta\s*:\s*(\S+)/);
+    if (m) {
+      G.meta.desde = m[1].substring(0,10);
+      G.meta.hasta = m[2].substring(0,10);
+    }
+  }
+
+  // --- Derive per-conductor & per-vehicle aggregates ---
+  const condNames = [...new Set(G.rows.map(r=>r.cond))].filter(Boolean);
+  condNames.forEach((name, idx) => {
+    G.colors[name] = PALETTE[idx % PALETTE.length];
+  });
+
+  G.conductores = {};
+  condNames.forEach(name => {
+    const sub = G.rows.filter(r=>r.cond===name);
+    G.conductores[name] = buildAggregate(sub, name);
+    G.conductores[name].placa    = sub[0]?.alias || '—';
+    G.conductores[name].color    = G.colors[name];
+    G.conductores[name].alias    = sub[0]?.alias || '—';
+  });
+
+  G.vehiculos = {};
+  const vehNames = [...new Set(G.rows.map(r=>r.alias))].filter(Boolean);
+  vehNames.forEach((alias, idx) => {
+    const sub = G.rows.filter(r=>r.alias===alias);
+    const placa = extractPlaca(alias);
+    G.vehiculos[alias] = buildAggregate(sub, alias);
+    G.vehiculos[alias].placa     = placa;
+    G.vehiculos[alias].conductor = sub[0]?.cond || '—';
+    G.vehiculos[alias].color     = PALETTE[idx % PALETTE.length];
+  });
+}
+
+function buildAggregate(sub, label) {
+  const velMaxAll = sub.map(r=>r.velMax).filter(v=>v>0);
+  // by hour 0-23
+  const porHora = Array(24).fill(0);
+  sub.forEach(r=>{ if(r.hora>=0) porHora[r.hora]++; });
+  // by weekday Sun=0..Sat=6 → reorder to Mon=0..Sun=6
+  const porDiaRaw = Array(7).fill(0);
+  sub.forEach(r=>{ if(r.dia>=0) porDiaRaw[r.dia]++; });
+  const porDia = [porDiaRaw[1],porDiaRaw[2],porDiaRaw[3],porDiaRaw[4],porDiaRaw[5],porDiaRaw[6],porDiaRaw[0]];
+  // by date
+  const byDate = {};
+  sub.forEach(r=>{
+    if(!r.fecha) return;
+    const k = r.fecha.toISOString().substring(0,10);
+    byDate[k] = (byDate[k]||0)+1;
+  });
+  const dates = Object.keys(byDate).sort();
+  return {
+    label, excesos: sub.length,
+    velMax:  velMaxAll.length ? Math.max(...velMaxAll) : 0,
+    velProm: sub.length ? sub.reduce((a,r)=>a+r.velProm,0)/sub.length : 0,
+    porHora, porDia, byDate, dates,
+    events: sub,
+  };
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER APP SHELL
+// ══════════════════════════════════════════════════════
+function renderApp() {
+  document.getElementById('configBanner').style.display = 'none';
+  document.getElementById('appTopbar').style.display   = '';
+  document.getElementById('appTabs').style.display     = '';
+  document.getElementById('appFooter').style.display   = '';
+
+  // Period label
+  if (G.meta.desde && G.meta.hasta) {
+    document.getElementById('periodLabel').textContent = `${fmtDate(G.meta.desde)} — ${fmtDate(G.meta.hasta)}`;
+  }
+  document.getElementById('footerText').textContent =
+    `Reporte · ${G.rows.length} eventos · generado automáticamente`;
+
+  renderFlota();
+  renderConductorTab();
+  renderVehiculoTab();
+  renderDetalleTab();
+}
+
+// ══════════════════════════════════════════════════════
+// FLOTA TAB
+// ══════════════════════════════════════════════════════
+function renderFlota() {
+  destroyCharts(['cTend','cHoras','cDias','cVelDist']);
+
+  const total      = G.rows.length;
+  const globalMax  = Math.max(...G.rows.map(r=>r.velMax));
+  const globalProm = G.rows.reduce((a,r)=>a+r.velProm,0)/total;
+  const nCond      = Object.keys(G.conductores).length;
+  const nVeh       = Object.keys(G.vehiculos).length;
+
+  // Ranking sorted by excesos desc
+  const ranking = Object.values(G.conductores).sort((a,b)=>b.excesos-a.excesos);
+  const rankColors = ['var(--red)','var(--amber)','var(--lime)','var(--blue)','var(--purple)'];
+
+  // Horas totales
+  const horasTot = Array(24).fill(0);
+  G.rows.forEach(r=>{ if(r.hora>=0) horasTot[r.hora]++; });
+  const peakHora = horasTot.indexOf(Math.max(...horasTot));
+
+  // Días totales (Mon-Sun)
+  const diasTot = Array(7).fill(0);
+  G.rows.forEach(r=>{ if(r.dia>=0){ const d=(r.dia+6)%7; diasTot[d]++; } });
+
+  // All dates for trend
+  const allDates = [...new Set(G.rows.filter(r=>r.fecha).map(r=>r.fecha.toISOString().substring(0,10)))].sort();
+
+  // Vel distribution bins
+  const bins = [0,25,30,35,40,45,50,55,60,70,200];
+  const binLabels = ['<25','25-30','30-35','35-40','40-45','45-50','50-55','55-60','60-70','>70'];
+
+  document.getElementById('tab-flota').innerHTML = `
+  <div class="main">
+    <div>
+      <div class="sec-label">Resumen del período</div>
+      <div class="kpi-row">
+        <div class="kpi" style="--accent:var(--red);"><div class="kpi-label">Total Excesos</div><div class="kpi-value" style="--kv:var(--red);">${total}</div><div class="kpi-sub">todos los vehículos</div></div>
+        <div class="kpi" style="--accent:var(--amber);"><div class="kpi-label">Vel. Máxima</div><div class="kpi-value" style="--kv:var(--amber);">${globalMax.toFixed(1)}</div><div class="kpi-sub">km/h registrada</div></div>
+        <div class="kpi" style="--accent:var(--lime);"><div class="kpi-label">Vel. Promedio</div><div class="kpi-value" style="--kv:var(--lime);">${globalProm.toFixed(1)}</div><div class="kpi-sub">km/h en exceso</div></div>
+        <div class="kpi" style="--accent:var(--blue);"><div class="kpi-label">Conductores</div><div class="kpi-value" style="--kv:var(--blue);">${nCond}</div><div class="kpi-sub">activos</div></div>
+        <div class="kpi" style="--accent:#a78bfa;"><div class="kpi-label">Vehículos</div><div class="kpi-value" style="--kv:#a78bfa;">${nVeh}</div><div class="kpi-sub">con registros</div></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Tendencia diaria</div><div class="card-sub">Excesos por conductor · día a día</div></div></div>
+        <div class="cw" style="height:220px;"><canvas id="cTend" role="img" aria-label="Tendencia diaria de excesos">Tendencia diaria de excesos por conductor.</canvas></div>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+          ${ranking.map(c=>`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted2)"><span style="width:10px;height:3px;background:${c.color};border-radius:2px;display:inline-block;"></span>${c.label.split(' ')[0]} (${c.excesos})</span>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Excesos por hora</div><div class="card-sub">Pico de incumplimiento · flota completa</div></div><span class="card-tag tag-red">PEAK ${String(peakHora).padStart(2,'0')}:00h</span></div>
+        <div class="cw" style="height:220px;"><canvas id="cHoras" role="img" aria-label="Excesos por hora del día">Excesos por hora del día.</canvas></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Excesos por día de semana</div><div class="card-sub">Distribución semanal · flota completa</div>
+        <div class="cw" style="height:200px;"><canvas id="cDias" role="img" aria-label="Excesos por día de la semana">Excesos por día de la semana.</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Distribución de velocidades máximas</div><div class="card-sub">Frecuencia por rango · todos los eventos</div>
+        <div class="cw" style="height:200px;"><canvas id="cVelDist" role="img" aria-label="Distribución de velocidades">Histograma de velocidades máximas.</canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head" style="margin-bottom:14px;"><div><div class="card-title">Ranking de conductores</div><div class="card-sub">Clasificación por volumen de excesos</div></div></div>
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Conductor</th><th>Vehículo</th><th>Excesos</th><th>Vel. Máx</th><th>Vel. Prom</th><th>Volumen relativo</th></tr></thead>
+        <tbody>
+          ${ranking.map((c,i)=>`<tr>
+            <td><span class="rank-num ${i===0?'r1':i===1?'r2':'r3'}">${i+1}</span></td>
+            <td><span style="font-weight:700;color:var(--text);">${c.label}</span></td>
+            <td><span class="mono-sm" style="color:${c.color};">${extractPlaca(c.placa)}</span></td>
+            <td><span style="font-family:'Space Mono',monospace;font-weight:700;color:${rankColors[i]||'var(--text)'};">${c.excesos}</span></td>
+            <td><span class="mono-sm" style="color:${c.velMax>=60?'var(--red)':c.velMax>=45?'var(--amber)':'var(--muted2)'};">${c.velMax.toFixed(1)} km/h</span></td>
+            <td><span class="mono-sm">${c.velProm.toFixed(1)} km/h</span></td>
+            <td style="width:200px;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--ink3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.round(c.excesos/ranking[0].excesos*100)}%;background:${c.color};border-radius:3px;"></div></div><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">${Math.round(c.excesos/ranking[0].excesos*100)}%</span></div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  setTimeout(()=>{
+    // Tendencia
+    const datasets = ranking.map(c=>{
+      const data = allDates.map(d=>c.byDate[d]||0);
+      return { label:c.label, data, borderColor:c.color, backgroundColor:`${c.color}10`,
+        borderWidth:2, pointRadius:4, pointBackgroundColor:c.color, fill:true, tension:0.35 };
+    });
+    activeCharts.cTend = new Chart(document.getElementById('cTend'),{
+      type:'line',
+      data:{ labels:allDates.map(d=>d.substring(5)), datasets },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{ x:chartXOpts(), y:chartYOpts() } }
+    });
+
+    // Horas
+    activeCharts.cHoras = new Chart(document.getElementById('cHoras'),{
+      type:'bar',
+      data:{ labels:Array.from({length:24},(_,i)=>i+'h'),
+        datasets:[{label:'Excesos',data:horasTot,borderRadius:3,borderSkipped:false,
+          backgroundColor:horasTot.map(v=>v>=Math.max(...horasTot)*0.8?'#f04545':v>=Math.max(...horasTot)*0.5?'#f5a623':v>0?'rgba(91,156,246,0.7)':'rgba(94,100,128,0.2)')}] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{ x:{ticks:{color:'#5e6480',font:{family:'Space Mono',size:8},maxRotation:45,autoSkip:false},grid:{display:false},border:{color:'transparent'}},
+                 y:chartYOpts() } }
+    });
+
+    // Días
+    const diaDias = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+    const diasMax = Math.max(...diasTot);
+    activeCharts.cDias = new Chart(document.getElementById('cDias'),{
+      type:'bar',
+      data:{ labels:diaDias,
+        datasets:[{label:'Excesos',data:diasTot,borderRadius:4,
+          backgroundColor:diasTot.map(v=>v>=diasMax*0.8?'#f04545':v>=diasMax*0.5?'#f5a623':'rgba(91,156,246,0.6)')}] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{ x:chartXOpts(), y:chartYOpts() } }
+    });
+
+    // Vel dist stacked
+    const velDatasets = ranking.map(c=>({
+      label:c.label,
+      data: binLabels.map((_,bi)=>{
+        const lo=bins[bi], hi=bins[bi+1];
+        return c.events.filter(r=>r.velMax>=lo&&r.velMax<hi).length;
+      }),
+      backgroundColor:c.color+'bb', borderRadius:3
+    }));
+    activeCharts.cVelDist = new Chart(document.getElementById('cVelDist'),{
+      type:'bar',
+      data:{ labels:binLabels, datasets:velDatasets },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{ x:{stacked:true,...chartXOptsRaw()}, y:{stacked:true,...chartYOptsRaw()} } }
+    });
+  },80);
+}
+
+// ══════════════════════════════════════════════════════
+// CONDUCTOR TAB
+// ══════════════════════════════════════════════════════
+function renderConductorTab() {
+  const names = Object.keys(G.conductores);
+  const btns = names.map((n,i)=>`<button class="sel-btn${i===0?' active':''}" onclick="selectConductor(this,'${n}')">${n}</button>`).join('');
+  document.getElementById('tab-conductor').innerHTML = `
+  <div class="main">
+    <div>
+      <div class="sec-label">Selector de conductor</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="condBtns">${btns}</div>
+    </div>
+    <div id="condPanel"></div>
+  </div>`;
+  if (names.length > 0) renderConductorPanel(names[0]);
+}
+
+function selectConductor(btn, name) {
+  document.querySelectorAll('#condBtns .sel-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderConductorPanel(name);
+}
+
+function renderConductorPanel(name) {
+  destroyCharts(['cCHoras','cCTend']);
+  const c = G.conductores[name];
+  if (!c) return;
+  const ranking = Object.values(G.conductores).sort((a,b)=>b.excesos-a.excesos);
+  const rankPos = ranking.findIndex(r=>r.label===name)+1;
+  const maxExc  = ranking[0].excesos;
+  const dias    = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const maxDia  = Math.max(...c.porDia);
+  const peakDia = dias[c.porDia.indexOf(maxDia)];
+  const scoreNum = Math.max(10, Math.round(100 - (c.excesos/maxExc)*60 - (c.velMax>60?20:c.velMax>45?10:0)));
+  const scoreClr = scoreNum>=70?'#b8f53a':scoreNum>=50?'#f5a623':'#f04545';
+
+  document.getElementById('condPanel').innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    <div class="grid3">
+      <div class="card">
+        <div class="sec-label" style="font-size:9px;margin-bottom:12px;">Scorecard</div>
+        <div style="display:flex;align-items:center;gap:18px;">
+          <div style="position:relative;width:76px;height:76px;flex-shrink:0;">
+            <svg width="76" height="76" viewBox="0 0 76 76">
+              <circle cx="38" cy="38" r="32" fill="none" stroke="var(--ink3)" stroke-width="7"/>
+              <circle cx="38" cy="38" r="32" fill="none" stroke="${scoreClr}" stroke-width="7"
+                stroke-dasharray="${2*Math.PI*32*scoreNum/100} ${2*Math.PI*32}"
+                stroke-dashoffset="${2*Math.PI*32*.25}" stroke-linecap="round"/>
+            </svg>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+              <div style="font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:${scoreClr};">${scoreNum}</div>
+              <div style="font-size:9px;color:var(--muted);">/100</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:20px;font-weight:900;color:var(--text);">${name}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:12px;color:${c.color};margin-top:2px;">${extractPlaca(c.placa)}</div>
+            <div style="font-size:11px;color:var(--muted2);margin-top:6px;">#${rankPos} en flota · ${c.excesos} excesos</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-label" style="font-size:9px;margin-bottom:10px;">Métricas</div>
+        <div class="metric-row"><span class="metric-label">Total excesos</span><div class="metric-track"><div class="metric-fill" style="width:${Math.round(c.excesos/maxExc*100)}%;background:${c.color};"></div></div><span class="metric-val">${c.excesos}</span></div>
+        <div class="metric-row"><span class="metric-label">Vel. máxima</span><div class="metric-track"><div class="metric-fill" style="width:${Math.round(c.velMax/100*100)}%;background:${c.velMax>=60?'var(--red)':c.velMax>=45?'var(--amber)':'var(--lime)'};"></div></div><span class="metric-val">${c.velMax.toFixed(1)}</span></div>
+        <div class="metric-row"><span class="metric-label">Vel. promedio</span><div class="metric-track"><div class="metric-fill" style="width:${Math.round(c.velProm/50*100)}%;background:var(--blue);"></div></div><span class="metric-val">${c.velProm.toFixed(1)}</span></div>
+      </div>
+      <div class="card">
+        <div class="sec-label" style="font-size:9px;margin-bottom:10px;">Por día de semana</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">
+          ${dias.map((d,i)=>{
+            const v=c.porDia[i]; const pct=maxDia>0?v/maxDia:0;
+            const bg=v===0?'var(--ink3)':pct>0.8?'#f04545':pct>0.5?'#f5a623':c.color;
+            return `<div style="text-align:center;">
+              <div style="height:${Math.max(4,pct*56)}px;background:${bg};border-radius:3px 3px 0 0;margin-bottom:3px;"></div>
+              <div style="font-size:8px;color:var(--muted);font-family:'Space Mono',monospace;">${d}</div>
+              <div style="font-size:10px;font-weight:700;color:var(--text);font-family:'Space Mono',monospace;">${v}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--muted2);margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
+          Día pico: <span style="color:${scoreClr};font-weight:700;">${peakDia} (${maxDia})</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Excesos por hora</div><div class="card-sub">Distribución horaria personal</div>
+        <div class="cw" style="height:200px;"><canvas id="cCHoras" role="img" aria-label="Excesos por hora">Excesos por hora para ${name}.</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Tendencia diaria</div><div class="card-sub">Evolución durante el período</div>
+        <div class="cw" style="height:200px;"><canvas id="cCTend" role="img" aria-label="Tendencia diaria">Tendencia diaria para ${name}.</canvas></div>
+      </div>
+    </div>
+  </div>`;
+
+  setTimeout(()=>{
+    activeCharts.cCHoras = new Chart(document.getElementById('cCHoras'),{
+      type:'bar',
+      data:{ labels:Array.from({length:24},(_,i)=>i+'h'),
+        datasets:[{label:'Excesos',data:c.porHora,borderRadius:3,
+          backgroundColor:c.porHora.map(v=>{ const mx=Math.max(...c.porHora); return v>=mx*.8?'#f04545':v>=mx*.5?'#f5a623':v>0?c.color:'rgba(94,100,128,0.2)'; })}] },
+      options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{ x:{ticks:{color:'#5e6480',font:{family:'Space Mono',size:8},maxRotation:45,autoSkip:false},grid:{display:false},border:{color:'transparent'}}, y:chartYOpts() } }
+    });
+    const tDates = c.dates;
+    activeCharts.cCTend = new Chart(document.getElementById('cCTend'),{
+      type:'line',
+      data:{ labels:tDates.map(d=>d.substring(5)),
+        datasets:[{label:'Excesos',data:tDates.map(d=>c.byDate[d]||0),borderColor:c.color,backgroundColor:`${c.color}15`,borderWidth:2,pointRadius:5,pointBackgroundColor:c.color,fill:true,tension:0.3}] },
+      options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{ x:chartXOpts(), y:chartYOpts({min:0}) } }
+    });
+  },80);
+}
+
+// ══════════════════════════════════════════════════════
+// VEHÍCULO TAB
+// ══════════════════════════════════════════════════════
+function renderVehiculoTab() {
+  const aliases = Object.keys(G.vehiculos);
+  const btns = aliases.map((a,i)=>`<button class="sel-btn${i===0?' active':''}" onclick="selectVehiculo(this,'${a}')">${extractPlaca(a)}</button>`).join('');
+  document.getElementById('tab-vehiculo').innerHTML = `
+  <div class="main">
+    <div>
+      <div class="sec-label">Selector de vehículo</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="vehBtns">${btns}</div>
+    </div>
+    <div id="vehPanel"></div>
+  </div>`;
+  if (aliases.length > 0) renderVehiclePanel(aliases[0]);
+}
+
+function selectVehiculo(btn, alias) {
+  document.querySelectorAll('#vehBtns .sel-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderVehiclePanel(alias);
+}
+
+function renderVehiclePanel(alias) {
+  destroyCharts(['cVHoras','cVTend']);
+  const v = G.vehiculos[alias];
+  if (!v) return;
+  const dias = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const maxDia = Math.max(...v.porDia);
+  const ranking = Object.values(G.vehiculos).sort((a,b)=>b.excesos-a.excesos);
+
+  document.getElementById('vehPanel').innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:16px;margin-top:4px;">
+    <div class="grid3">
+      <div class="card">
+        <div class="sec-label" style="font-size:9px;margin-bottom:10px;">Ficha del vehículo</div>
+        <div style="font-size:22px;font-weight:900;font-family:'Space Mono',monospace;color:${v.color};margin-bottom:4px;">${v.placa}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;">${alias}</div>
+        <div style="font-size:12px;color:var(--muted2);margin-bottom:14px;">Conductor: <span style="color:var(--text);font-weight:600;">${v.conductor}</span></div>
+        <div class="metric-row"><span class="metric-label">Total excesos</span><div class="metric-track"><div class="metric-fill" style="width:${Math.round(v.excesos/ranking[0].excesos*100)}%;background:${v.color};"></div></div><span class="metric-val">${v.excesos}</span></div>
+        <div class="metric-row"><span class="metric-label">Vel. máxima</span><div class="metric-track"><div class="metric-fill" style="width:${Math.round(v.velMax)}%;background:${v.velMax>=60?'var(--red)':v.velMax>=45?'var(--amber)':'var(--lime)'};"></div></div><span class="metric-val">${v.velMax.toFixed(1)}</span></div>
+        <div class="metric-row"><span class="metric-label">Vel. promedio</span><div class="metric-track"><div class="metric-fill" style="width:${Math.round(v.velProm/50*100)}%;background:var(--blue);"></div></div><span class="metric-val">${v.velProm.toFixed(1)}</span></div>
+      </div>
+      <div class="card" style="grid-column:2/4;">
+        <div class="card-title">Distribución semanal</div><div class="card-sub">Excesos por día · ${v.placa}</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px;">
+          ${dias.map((d,i)=>{
+            const val=v.porDia[i]; const pct=maxDia>0?val/maxDia:0;
+            const bg=val===0?'var(--ink3)':pct>0.8?'#f04545':pct>0.5?'#f5a623':v.color;
+            return `<div style="text-align:center;">
+              <div style="height:${Math.max(4,pct*80)}px;background:${bg};border-radius:4px 4px 0 0;margin-bottom:5px;"></div>
+              <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;">${d}</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);font-family:'Space Mono',monospace;">${val}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Excesos por hora</div><div class="card-sub">Concentración horaria de eventos</div>
+        <div class="cw" style="height:200px;"><canvas id="cVHoras" role="img" aria-label="Excesos por hora del vehículo">Excesos por hora para ${v.placa}.</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Tendencia diaria</div><div class="card-sub">Evolución de excesos en el período</div>
+        <div class="cw" style="height:200px;"><canvas id="cVTend" role="img" aria-label="Tendencia diaria del vehículo">Tendencia diaria para ${v.placa}.</canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;">Posición en flota</div>
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Vehículo</th><th>Conductor</th><th>Excesos</th><th>Vel. Máx</th><th>Vel. Prom</th></tr></thead>
+        <tbody>
+          ${ranking.map((vv,i)=>`<tr style="${vv.label===alias?'background:rgba(255,255,255,.025);':''}">
+            <td><span class="rank-num ${i===0?'r1':i===1?'r2':'r3'}">${i+1}</span></td>
+            <td><span style="font-family:'Space Mono',monospace;font-weight:700;font-size:11px;color:${vv.color};">${vv.placa}</span>${vv.label===alias?' <span style="font-size:10px;color:var(--muted);">◀</span>':''}</td>
+            <td><span style="font-size:13px;font-weight:${vv.label===alias?700:400};color:${vv.label===alias?'var(--text)':'var(--muted2)'};">${vv.conductor}</span></td>
+            <td><span style="font-family:'Space Mono',monospace;font-weight:700;color:${i===0?'var(--red)':i===1?'var(--amber)':'var(--lime)'};">${vv.excesos}</span></td>
+            <td><span class="mono-sm" style="color:${vv.velMax>=60?'var(--red)':vv.velMax>=45?'var(--amber)':'var(--muted2)'};">${vv.velMax.toFixed(1)} km/h</span></td>
+            <td><span class="mono-sm">${vv.velProm.toFixed(1)} km/h</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  setTimeout(()=>{
+    activeCharts.cVHoras = new Chart(document.getElementById('cVHoras'),{
+      type:'bar',
+      data:{ labels:Array.from({length:24},(_,i)=>i+'h'),
+        datasets:[{label:'Excesos',data:v.porHora,borderRadius:3,
+          backgroundColor:v.porHora.map(hv=>{ const mx=Math.max(...v.porHora); return hv>=mx*.8?'#f04545':hv>=mx*.5?'#f5a623':hv>0?v.color:'rgba(94,100,128,0.2)'; })}] },
+      options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{ x:{ticks:{color:'#5e6480',font:{family:'Space Mono',size:8},maxRotation:45,autoSkip:false},grid:{display:false},border:{color:'transparent'}},y:chartYOpts() } }
+    });
+    activeCharts.cVTend = new Chart(document.getElementById('cVTend'),{
+      type:'line',
+      data:{ labels:v.dates.map(d=>d.substring(5)),
+        datasets:[{label:'Excesos',data:v.dates.map(d=>v.byDate[d]||0),borderColor:v.color,backgroundColor:`${v.color}15`,borderWidth:2,pointRadius:5,pointBackgroundColor:v.color,fill:true,tension:0.3}] },
+      options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{ x:chartXOpts(), y:chartYOpts({min:0}) } }
+    });
+  },80);
+}
+
+// ══════════════════════════════════════════════════════
+// DETALLE TAB
+// ══════════════════════════════════════════════════════
+function renderDetalleTab() {
+  document.getElementById('tab-detalle').innerHTML = `
+  <div class="main">
+    <div class="sec-label">Todos los eventos registrados</div>
+    <div class="card">
+      <div class="card-head" style="margin-bottom:12px;">
+        <div><div class="card-title">Log de excesos de velocidad</div><div class="card-sub">${G.rows.length} eventos · velocidad límite zona: 50 km/h</div></div>
+        <input class="search-input" id="dtlSearch" type="text" placeholder="Filtrar conductor / vehículo…" oninput="filterDetail()">
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="dtl-table">
+          <thead><tr><th>#</th><th>Conductor</th><th>Vehículo</th><th>Fecha</th><th>Hora</th><th>Vel. Máx</th><th>Vel. Prom</th><th>Duración</th><th>Zona</th></tr></thead>
+          <tbody id="dtlBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+  renderDetailRows(G.rows);
+}
+
+function filterDetail() {
+  const q = document.getElementById('dtlSearch').value.toLowerCase();
+  const filtered = q ? G.rows.filter(r=>r.cond.toLowerCase().includes(q)||r.alias.toLowerCase().includes(q)) : G.rows;
+  renderDetailRows(filtered);
+}
+
+function renderDetailRows(rows) {
+  const maxV = Math.max(...rows.map(r=>r.velMax),1);
+  document.getElementById('dtlBody').innerHTML = rows.slice(0,500).map((r,i)=>{
+    const clr = r.velMax>=60?'var(--red)':r.velMax>=45?'var(--amber)':'var(--muted2)';
+    const cClr = G.colors[r.cond]||'var(--lime)';
+    const bW = Math.round(r.velMax/maxV*100);
+    const bC = r.velMax>=60?'#f04545':r.velMax>=45?'#f5a623':'#5b9cf6';
+    const fechaStr = r.fecha ? r.fecha.toLocaleDateString('es-CL') : '—';
+    const horaStr  = r.fecha ? r.fecha.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}) : '—';
+    return `<tr>
+      <td><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">${String(i+1).padStart(3,'0')}</span></td>
+      <td><span style="font-weight:600;color:${cClr};">${r.cond}</span></td>
+      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--lime);">${extractPlaca(r.alias)}</span></td>
+      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${fechaStr}</span></td>
+      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${horaStr}</span></td>
+      <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:${bW}%;height:4px;border-radius:2px;background:${bC};min-width:4px;"></div><span style="font-family:'Space Mono',monospace;font-size:11px;color:${clr};font-weight:700;">${r.velMax.toFixed(1)}</span></div></td>
+      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${r.velProm.toFixed(1)}</span></td>
+      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${r.tiempo}</span></td>
+      <td><span style="font-size:11px;color:var(--muted2);">${r.dirIni}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ══════════════════════════════════════════════════════
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════
+function destroyCharts(ids) {
+  ids.forEach(id=>{ if(activeCharts[id]){activeCharts[id].destroy();delete activeCharts[id];} });
+}
+function chartXOpts(extra={}) { return {ticks:{color:'#5e6480',font:{family:'Space Mono',size:10}},grid:{color:'rgba(255,255,255,0.03)'},border:{color:'transparent'},...extra}; }
+function chartXOptsRaw(extra={}) { return {ticks:{color:'#5e6480',font:{family:'Space Mono',size:9}},grid:{display:false},border:{color:'transparent'},...extra}; }
+function chartYOpts(extra={}) { return {ticks:{color:'#5e6480',font:{family:'Space Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'transparent'},...extra}; }
+function chartYOptsRaw(extra={}) { return {ticks:{color:'#5e6480',font:{family:'Space Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'transparent'},...extra}; }
+
+function extractPlaca(alias) {
+  const m = alias.match(/[A-Z]{2,4}[\s-]?\d{2,3}|[A-Z]{4}-\d{2}/);
+  return m ? m[0] : alias.split(' ').slice(-1)[0];
+}
+function limpiarDir(dir) {
+  return dir.replace(/VMax[A-Za-z]+:\d+,?\s*/g,'').replace(/\.\s*$/,'').trim().split(',')[0] || dir;
+}
+function titleCase(str) {
+  return str.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+}
+function fmtDate(isoStr) {
+  try { return new Date(isoStr+'T00:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}); }
+  catch { return isoStr; }
+}
+
+function showLoading(msg) {
+  document.getElementById('loadingScreen').classList.remove('hidden');
+  document.getElementById('loadMsg').textContent = msg;
+  document.getElementById('loadError').style.display = 'none';
+  document.getElementById('loadRetry').style.display = 'none';
+  document.getElementById('appTopbar').style.display = 'none';
+  document.getElementById('appTabs').style.display = 'none';
+  document.getElementById('appFooter').style.display = 'none';
+}
+function setLoadMsg(msg) { document.getElementById('loadMsg').textContent = msg; }
+function hideLoading()   { document.getElementById('loadingScreen').classList.add('hidden'); }
+function showLoadError(msg) {
+  document.getElementById('loadMsg').textContent = '';
+  document.getElementById('loadError').textContent = '⚠ ' + msg;
+  document.getElementById('loadError').style.display = 'block';
+  document.getElementById('loadRetry').style.display = 'inline-block';
+}
+</script>
+</body>
+</html>
