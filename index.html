@@ -31,7 +31,7 @@
 
 /* ── LOADING SCREEN ── */
 #loadingScreen {
-  position: fixed; inset: 0; background: #0d0f14; z-index: 9999;
+  position: fixed; inset: 0; background: #111b21; z-index: 9999;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
 }
 #loadingScreen.hidden { display: none; }
@@ -40,15 +40,15 @@
   border-top-color: #b8f53a; border-radius: 50%; animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-#loadMsg { font-family: 'Space Mono', monospace; font-size: 13px; color: #5e6480; }
+#loadMsg { font-family: 'Space Mono', monospace; font-size: 13px; color: #8696a0; }
 #loadError { font-family: 'Space Mono', monospace; font-size: 12px; color: #f04545; max-width: 500px; text-align: center; display: none; }
 #loadRetry { display: none; background: #f04545; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-weight: 700; cursor: pointer; font-family: 'Epilogue', sans-serif; font-size: 13px; }
 
 /* ── CORE THEME ── */
 :root {
-  --ink:        #1f1f1f;
-  --ink2:       #2a2a2a;
-  --ink3:       #343434;
+  --ink:        #111b21;
+  --ink2:       #202c33;
+  --ink3:       #2a3942;
   --line:       rgba(255,255,255,0.06);
   --line2:      rgba(255,255,255,0.10);
   --text:       #e9eaf2;
@@ -64,7 +64,7 @@
   --blue-dim:   rgba(91,156,246,0.10);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Epilogue',sans-serif;background:#2a2a2a;color:var(--text);min-height:100vh;font-size:14px;}
+body{font-family:'Epilogue',sans-serif;background:var(--ink);color:var(--text);min-height:100vh;font-size:14px;}
 
 /* TOPBAR */
 .topbar{
@@ -195,7 +195,7 @@ canvas{display:block;}
 <header class="topbar" id="appTopbar" style="display:none;">
   <div class="brand">
     <div class="brand-mark">
-      <svg viewBox="0 0 18 18" fill="none"><path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#0d0f14" stroke-width="1.5" fill="#0d0f14"/><circle cx="9" cy="9" r="2.5" fill="#b8f53a"/></svg>
+      <svg viewBox="0 0 18 18" fill="none"><path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" stroke="#111b21" stroke-width="1.5" fill="#111b21"/><circle cx="9" cy="9" r="2.5" fill="#b8f53a"/></svg>
     </div>
     <span class="brand-name">GPS<span>Monitor</span></span>
     <span class="client-pill" id="clientLabel">CARGANDO</span>
