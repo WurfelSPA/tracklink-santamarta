@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 /**
- * TrackGTS Report Downloader v3
- * - Usa page.type() para simular escritura real (dispara eventos del formulario)
- * - Verifica login exitoso antes de llamar a la API
+ * TrackGTS Report Downloader v4
+ * - Detecta iframe y trabaja dentro de él
  * - Fetch desde el contexto del browser (cookies de sesion automaticas)
  */
 'use strict';
@@ -35,14 +34,37 @@ function getWeekDateRange() {
   return { startDate: fmt(start), endDate: fmt(end) };
 }
 
-async function typeInField(page, selector, value) {
-  try {
-    await page.click(selector, { clickCount: 3 }); // triple click = select all
-    await page.type(selector, value, { delay: 30 });
-    return true;
-  } catch {
-    return false;
+async function findLoginFrame(page) {
+  // Espera hasta 15s a que aparezca algun input en cualquier frame
+  for (let i = 0; i < 30; i++) {
+    const frames = page.frames();
+    for (const frame of frames) {
+      try {
+        const info = await frame.evaluate(() => ({
+          url    : window.location.href,
+          inputs : Array.from(document.querySelectorAll('input'))
+                     .map(el => ({ id: el.id, name: el.name, type: el.type })),
+          hasOnLoginOn: typeof onLoginOn === 'function',
+        }));
+        if (info.inputs.length > 0) {
+          console.log(`[1] Formulario en frame: ${info.url}`);
+          console.log(`[1] Inputs: ${JSON.stringify(info.inputs)}`);
+          console.log(`[1] hasOnLoginOn: ${info.hasOnLoginOn}`);
+          return { frame, info };
+        }
+      } catch { /* frame puede no estar listo aun */ }
+    }
+    await new Promise(r => setTimeout(r, 500));
   }
+  return null;
+}
+
+async function typeInFrame(frame, selector, value) {
+  try {
+    await frame.click(selector, { clickCount: 3 });
+    await frame.type(selector, value, { delay: 30 });
+    return true;
+  } catch { return false; }
 }
 
 async function main() {
@@ -51,7 +73,7 @@ async function main() {
     throw new Error('Faltan variables: TL_USER, TL_PASSWORD, TL_DOMAIN');
   }
 
-  console.log('=== TrackGTS Report Downloader v3 ===');
+  console.log('=== TrackGTS Report Downloader v4 ===');
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -67,75 +89,64 @@ async function main() {
     console.log(`[1] Abriendo: ${loginUrl}`);
     await page.goto(loginUrl, { waitUntil: 'networkidle2', timeout: 30_000 });
 
-    // Diagnostico: que inputs existen en la pagina?
-    const formInfo = await page.evaluate(() => ({
-      inputs: Array.from(document.querySelectorAll('input'))
-        .map(el => ({ id: el.id, name: el.name, type: el.type, placeholder: el.placeholder })),
-      hasOnLoginOn: typeof onLoginOn !== 'undefined',
-      buttons: Array.from(document.querySelectorAll('button, input[type=submit]'))
-        .map(el => ({ id: el.id, text: el.innerText || el.value, onclick: el.getAttribute('onclick') })),
-    }));
-    console.log('[1] Formulario:', JSON.stringify(formInfo));
+    // Log todos los frames
+    const allFrames = page.frames();
+    console.log(`[1] Frames detectados: ${allFrames.length}`);
+    allFrames.forEach((f, i) => {
+      try { console.log(`    Frame ${i}: ${f.url()}`); } catch {}
+    });
 
-    // ── 2. Llenar campos con page.type() (simula teclado real) ────────────
-    console.log('[2] Llenando usuario...');
-    const filledUser = await typeInField(page, '#user', TL_USER)
-      || await typeInField(page, 'input[name="user"]', TL_USER)
-      || await typeInField(page, 'input[type="text"]:first-of-type', TL_USER);
-    console.log(`    usuario: ${filledUser ? 'OK' : 'FALLO'}`);
+    // Buscar el frame con el formulario de login
+    const found = await findLoginFrame(page);
+    if (!found) throw new Error('No se encontro formulario de login en ningun frame despues de 15s');
 
-    console.log('[2] Llenando password...');
-    const filledPass = await typeInField(page, '#password', TL_PASSWORD)
-      || await typeInField(page, 'input[name="password"]', TL_PASSWORD)
-      || await typeInField(page, 'input[type="password"]', TL_PASSWORD);
-    console.log(`    password: ${filledPass ? 'OK' : 'FALLO'}`);
+    const { frame, info } = found;
 
-    console.log('[2] Llenando dominio...');
-    const filledDomain = await typeInField(page, '#domain', TL_DOMAIN)
-      || await typeInField(page, 'input[name="domain"]', TL_DOMAIN);
-    console.log(`    dominio: ${filledDomain ? 'OK' : 'no existe campo (puede ser normal)'}`);
+    // ── 2. Llenar campos ──────────────────────────────────────────────────
+    console.log('[2] Llenando campos...');
+
+    const userSel = info.inputs.find(f => f.id === 'user' || f.name === 'user')
+      ? '#user' : 'input[type="text"]:first-of-type';
+    const passSel = info.inputs.find(f => f.id === 'password' || f.type === 'password')
+      ? (info.inputs.find(f => f.id === 'password') ? '#password' : 'input[type="password"]')
+      : 'input[type="password"]';
+
+    const okUser = await typeInFrame(frame, '#user', TL_USER)
+      || await typeInFrame(frame, 'input[name="user"]', TL_USER)
+      || await typeInFrame(frame, 'input[type="text"]:first-of-type', TL_USER);
+    console.log(`    usuario (${userSel}): ${okUser ? 'OK' : 'FALLO'}`);
+
+    const okPass = await typeInFrame(frame, '#password', TL_PASSWORD)
+      || await typeInFrame(frame, 'input[name="password"]', TL_PASSWORD)
+      || await typeInFrame(frame, 'input[type="password"]', TL_PASSWORD);
+    console.log(`    password: ${okPass ? 'OK' : 'FALLO'}`);
+
+    const hasDomain = info.inputs.some(f => f.id === 'domain' || f.name === 'domain');
+    if (hasDomain) {
+      const okDom = await typeInFrame(frame, '#domain', TL_DOMAIN)
+        || await typeInFrame(frame, 'input[name="domain"]', TL_DOMAIN);
+      console.log(`    dominio: ${okDom ? 'OK' : 'FALLO'}`);
+    } else {
+      console.log('    dominio: no hay campo (OK, viene del subdominio)');
+    }
 
     // ── 3. Disparar login ─────────────────────────────────────────────────
     console.log('[3] Disparando login...');
-    const trigger = await page.evaluate(() => {
+    const trigger = await frame.evaluate(() => {
       if (typeof onLoginOn === 'function') { onLoginOn(); return 'onLoginOn()'; }
       if (typeof loginOn   === 'function') { loginOn();   return 'loginOn()'; }
-      const btn = document.querySelector('button[onclick], button[type=submit], input[type=submit]');
-      if (btn) { btn.click(); return `click en: ${btn.id || btn.className || btn.type}`; }
+      const btn = document.querySelector('button[onclick], button[type=submit], input[type=submit], button');
+      if (btn) { btn.click(); return `click: ${btn.id || btn.innerText || btn.type}`; }
       return 'ninguno';
     });
     console.log(`[3] Trigger: ${trigger}`);
 
-    // ── 4. Esperar redireccion post-login ─────────────────────────────────
-    console.log('[4] Esperando redireccion del login...');
-    try {
-      await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30_000 });
-      console.log('[4] Navegacion detectada!');
-    } catch {
-      console.log('[4] Sin navegacion en 30s, continuando de todos modos...');
-    }
+    // ── 4. Esperar sesion ─────────────────────────────────────────────────
+    console.log('[4] Esperando 25s para que la sesion se establezca...');
+    await new Promise(r => setTimeout(r, 25_000));
+    console.log(`[4] URL main: ${page.url()}`);
 
-    const finalUrl = page.url();
-    console.log(`[4] URL final: ${finalUrl}`);
-
-    if (finalUrl.toLowerCase().includes('login')) {
-      // Si sigue en login, intentar una vez mas con un boton alternativo
-      console.log('[4] Todavia en login, intentando click en boton...');
-      await page.evaluate(() => {
-        const btn = document.querySelector('button, input[type=submit]');
-        if (btn) btn.click();
-      });
-      await new Promise(r => setTimeout(r, 15_000));
-      const url2 = page.url();
-      console.log(`[4] URL tras segundo intento: ${url2}`);
-      if (url2.toLowerCase().includes('login')) {
-        throw new Error(`Login fallido - sigue en pagina de login. Verifica TL_USER, TL_PASSWORD, TL_DOMAIN en los Secrets de GitHub.`);
-      }
-    }
-
-    console.log('[4] Login exitoso!');
-
-    // ── 5. Llamar API desde el browser (cookies automaticas) ──────────────
+    // ── 5. Fetch de la API desde el browser ───────────────────────────────
     const requestId = generateRequestId();
     const { startDate, endDate } = getWeekDateRange();
     const apiUrl = `https://www.trackgts.com:82/api/reportTravel/GetSpeedingReportByUnitsPagesZip/25/${requestId}`;
@@ -148,32 +159,39 @@ async function main() {
     console.log(`[5] POST -> ${apiUrl}`);
     console.log(`[5] Rango: ${startDate} -> ${endDate}`);
 
-    const result = await page.evaluate(async (url, reqBody) => {
+    // Intentar fetch desde page y desde frame
+    let result = null;
+    for (const ctx of [page, frame]) {
       try {
-        const res  = await fetch(url, {
-          method : 'POST',
-          headers: { 'Content-Type': 'application/json;charset=UTF-8' },
-          body   : reqBody,
-        });
-        const text = await res.text();
-        let json;
-        try { json = JSON.parse(text); }
-        catch { return { error: `No-JSON (HTTP ${res.status}): ${text.slice(0, 400)}` }; }
-        if (!json.FileContents) return { error: `Sin FileContents: ${JSON.stringify(json).slice(0, 500)}` };
-        return { fileContents: json.FileContents };
+        result = await ctx.evaluate(async (url, reqBody) => {
+          const res  = await fetch(url, {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json;charset=UTF-8' },
+            body   : reqBody,
+          });
+          const text = await res.text();
+          let json;
+          try { json = JSON.parse(text); } catch {
+            return { error: `No-JSON (${res.status}): ${text.slice(0, 400)}` };
+          }
+          if (!json.FileContents) return { error: `Sin FileContents: ${JSON.stringify(json).slice(0, 500)}` };
+          return { fileContents: json.FileContents };
+        }, apiUrl, body);
+        if (result && result.fileContents) break;
+        console.log(`[5] Contexto ${ctx === page ? 'page' : 'frame'}: ${result?.error}`);
       } catch (e) {
-        return { error: e.message };
+        console.log(`[5] Error en contexto: ${e.message}`);
       }
-    }, apiUrl, body);
+    }
 
-    if (result.error) throw new Error(result.error);
+    if (!result || result.error) throw new Error(result?.error || 'Sin respuesta de la API');
     console.log('[5] Reporte descargado OK');
 
-    // ── 6. Extraer .xlsx del zip ───────────────────────────────────────────
+    // ── 6. Extraer xlsx ───────────────────────────────────────────────────
     console.log('[6] Extrayendo .xlsx...');
     const zip  = new AdmZip(Buffer.from(result.fileContents, 'base64'));
     const xlsx = zip.getEntries().find(e => e.entryName.toLowerCase().endsWith('.xlsx'));
-    if (!xlsx) throw new Error(`Sin .xlsx en zip. Entradas: ${zip.getEntries().map(e=>e.entryName).join(', ')}`);
+    if (!xlsx) throw new Error(`Sin .xlsx. Entradas: ${zip.getEntries().map(e=>e.entryName).join(', ')}`);
 
     const dest = path.join(process.cwd(), 'INFORME EXCESOS DE VELOCIDAD.xlsx');
     fs.writeFileSync(dest, xlsx.getData());
