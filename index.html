@@ -876,8 +876,10 @@ function titleCase(str) {
   return str.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
 }
 function fmtDate(isoStr) {
-  try { return new Date(isoStr+'T00:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}); }
-  catch { return isoStr; }
+  try {
+    const normalized = String(isoStr).substring(0,10).replace(/\//g, '-');
+    return new Date(normalized + 'T00:00:00').toLocaleDateString('es-CL', {day:'2-digit', month:'short', year:'numeric'});
+  } catch { return isoStr; }
 }
 
 function showLoading(msg) {
