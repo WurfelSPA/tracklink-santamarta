@@ -483,27 +483,26 @@ function applyDateFilter() {
   let desdeStr = '', hastaStr = ''; // "YYYY-MM-DD" para comparación de strings
 
   if (mode === 'last7') {
-    const hoy = new Date();
-    const ayer = new Date(hoy); ayer.setDate(ayer.getDate() - 1);
-    const hace7 = new Date(hoy); hace7.setDate(hace7.getDate() - 7);
-    desdeStr = hace7.toISOString().substring(0,10); // "2026-05-26"
-    hastaStr = ayer.toISOString().substring(0,10);  // "2026-06-01"
-    dLabel = desdeStr; hLabel = hastaStr;
+    // Mostrar todos los datos del Excel (ya descargado con el período deseado)
+    G.rows = G.allRows.slice();
+    const fechas = G.allRows
+      .map(r => (r.fechaStr || '').replace(/\//g,'-'))
+      .filter(Boolean).sort();
+    dLabel = fechas[0]        || '';
+    hLabel = fechas[fechas.length-1] || '';
   } else {
-    desdeStr = document.getElementById('filterDesde').value; // "2026-05-18"
-    hastaStr = document.getElementById('filterHasta').value; // "2026-05-24"
+    desdeStr = document.getElementById('filterDesde').value;
+    hastaStr = document.getElementById('filterHasta').value;
     dLabel = desdeStr; hLabel = hastaStr;
+    // Filtrar por rango personalizado usando comparación de strings ISO
+    G.rows = G.allRows.filter(r => {
+      const fs = (r.fechaStr || '').replace(/\//g, '-');
+      if (!fs) return true;
+      if (desdeStr && fs < desdeStr) return false;
+      if (hastaStr && fs > hastaStr) return false;
+      return true;
+    });
   }
-
-  // Comparar como strings "YYYY-MM-DD" (lexicográficamente correcto para ISO dates)
-  // fechaStr está en formato "2026/05/26" → normalizamos a "2026-05-26"
-  G.rows = G.allRows.filter(r => {
-    if (!r.fechaStr) return true; // sin fecha → incluir siempre
-    const fs = r.fechaStr.replace(/\//g, '-'); // "2026-05-26"
-    if (desdeStr && fs < desdeStr) return false;
-    if (hastaStr && fs > hastaStr) return false;
-    return true;
-  });
 
   // Calcular rango disponible real en el archivo
   const fechasValidas = G.allRows.map(r=>r.fecha).filter(Boolean).sort((a,b)=>a-b);
