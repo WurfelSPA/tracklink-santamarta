@@ -497,13 +497,22 @@ function applyDateFilter() {
     return true;
   });
 
+  // Calcular rango disponible real en el archivo
+  const fechasValidas = G.allRows.map(r=>r.fecha).filter(Boolean).sort((a,b)=>a-b);
+  const disponibleDesde = fechasValidas[0];
+  const disponibleHasta = fechasValidas[fechasValidas.length-1];
+  const disponibleStr = disponibleDesde && disponibleHasta
+    ? ` · Datos disponibles: ${fmtDate(disponibleDesde.toISOString().substring(0,10))} — ${fmtDate(disponibleHasta.toISOString().substring(0,10))}`
+    : '';
+
   // Actualizar período en topbar
   if (dLabel && hLabel) {
     document.getElementById('periodLabel').textContent =
       `${fmtDate(dLabel)} — ${fmtDate(hLabel)}`;
   }
-  document.getElementById('filterCount').textContent =
-    G.rows.length ? `${G.rows.length} eventos` : 'Sin datos en el período';
+  document.getElementById('filterCount').textContent = G.rows.length
+    ? `${G.rows.length} eventos`
+    : `⚠ Sin datos en el período seleccionado${disponibleStr}`;
 
   rebuildAggregates();
   renderFlota();
