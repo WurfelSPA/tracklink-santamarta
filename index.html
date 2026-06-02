@@ -498,8 +498,8 @@ function applyDateFilter() {
   // Comparar como strings "YYYY-MM-DD" (lexicográficamente correcto para ISO dates)
   // fechaStr está en formato "2026/05/26" → normalizamos a "2026-05-26"
   G.rows = G.allRows.filter(r => {
+    if (!r.fechaStr) return true; // sin fecha → incluir siempre
     const fs = r.fechaStr.replace(/\//g, '-'); // "2026-05-26"
-    if (!fs) return false;
     if (desdeStr && fs < desdeStr) return false;
     if (hastaStr && fs > hastaStr) return false;
     return true;
