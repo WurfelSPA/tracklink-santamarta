@@ -73,7 +73,7 @@ async function main() {
     // ── 4. Fetch del reporte desde el contexto del browser ────────────────
     const now   = new Date();
     const start = new Date(now);
-    start.setDate(start.getDate() - 30); // 30 días para tener historial en el dashboard
+    start.setDate(start.getDate() - 60); // 60 días de historial en el dashboard
     const pad = n => String(n).padStart(2, '0');
     const fmt = d =>
       `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;

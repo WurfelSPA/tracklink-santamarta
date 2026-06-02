@@ -512,7 +512,7 @@ function applyDateFilter() {
   }
   document.getElementById('filterCount').textContent = G.rows.length
     ? `${G.rows.length} eventos`
-    : `⚠ Sin datos en el período seleccionado${disponibleStr}`;
+    : `⚠ Sin datos en el período consultado. Sólo últimos 60 días`;
 
   rebuildAggregates();
   renderFlota();
