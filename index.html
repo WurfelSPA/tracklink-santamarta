@@ -454,18 +454,26 @@ function renderApp() {
   document.getElementById('filterBar').style.display   = 'flex';
   document.getElementById('appFooter').style.display   = '';
 
-  // Inicializar inputs de fecha personalizada con últimos 7 días
-  const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const ayer   = new Date(hoy.getTime() - 1*86400000);
-  const hace7  = new Date(hoy.getTime() - 7*86400000);
-  document.getElementById('filterDesde').value = hace7.toISOString().substring(0,10);
-  document.getElementById('filterHasta').value = ayer.toISOString().substring(0,10);
+  // Inicializar inputs con rango del reporte
+  const fechas = G.allRows
+    .map(r => (r.fechaStr || '').replace(/\//g,'-')).filter(Boolean).sort();
+  document.getElementById('filterDesde').value = fechas[0] || '';
+  document.getElementById('filterHasta').value = fechas[fechas.length-1] || '';
 
-  document.getElementById('footerText').textContent =
-    `Reporte · ${G.allRows.length} eventos totales · generado automáticamente By Würfel SpA`;
+  // Período en topbar desde el Excel
+  if (G.meta.desde && G.meta.hasta) {
+    document.getElementById('periodLabel').textContent =
+      `${fmtDate(G.meta.desde)} — ${fmtDate(G.meta.hasta)}`;
+  }
+  document.getElementById('filterCount').textContent = `${G.allRows.length} eventos`;
+  document.getElementById('footerText').textContent  =
+    `Reporte · ${G.allRows.length} eventos · generado automáticamente By Würfel SpA`;
 
-  // Aplicar filtro por defecto (últimos 7 días) y renderizar
-  applyDateFilter();
+  // Renderizar con TODOS los datos (igual que antes, sin filtrar)
+  renderFlota();
+  renderConductorTab();
+  renderVehiculoTab();
+  renderDetalleTab();
 }
 
 // ══════════════════════════════════════════════════════
