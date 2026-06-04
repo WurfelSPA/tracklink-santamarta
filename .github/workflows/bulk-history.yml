@@ -1,12 +1,10 @@
-name: Update TrackLink Santa Marta Dashboard
+name: Bulk History Download (60 días)
 
 on:
-  schedule:
-    - cron: '0 */4 * * *'  # Cada 4 horas (00, 04, 08, 12, 16, 20 UTC)
-  workflow_dispatch:          # Botón manual en la pestaña Actions
+  workflow_dispatch:   # Solo manual — correr UNA VEZ para poblar el historial
 
 jobs:
-  update-dashboard:
+  bulk-download:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -30,27 +28,25 @@ jobs:
           npm install puppeteer adm-zip
           pip install openpyxl
 
-      - name: Download latest 7-day report from TrackGTS
+      - name: Download 9 ventanas de 7 días (≈ 63 días total)
         env:
           TL_USER:     ${{ secrets.TL_USER }}
           TL_PASSWORD: ${{ secrets.TL_PASSWORD }}
           TL_DOMAIN:   ${{ secrets.TL_DOMAIN }}
-        run: |
-          node download.js
-          mv "INFORME EXCESOS DE VELOCIDAD.xlsx" latest.xlsx
+        run: node bulk_download.js
 
-      - name: Merge with historical data (last 90 days)
+      - name: Merge all windows into historical file
         run: python merge_history.py
 
-      - name: Cleanup and commit
+      - name: Cleanup bulk files and commit
         run: |
-          rm -f latest.xlsx
+          rm -f bulk_*.xlsx latest.xlsx
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name  "github-actions[bot]"
           git add "INFORME EXCESOS DE VELOCIDAD.xlsx"
           if git diff --staged --quiet; then
-            echo "Sin datos nuevos."
+            echo "Sin cambios."
           else
-            git commit -m "chore: actualiza dashboard $(date -u +%Y-%m-%dT%H:%M)Z"
+            git commit -m "chore: carga histórica 60 días $(date -u +%Y-%m-%d)"
             git push
           fi
