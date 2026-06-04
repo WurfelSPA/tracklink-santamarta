@@ -124,7 +124,9 @@ def main():
             print(f'Recorte historial: {before} → {len(existing_rows)} filas (límite {MAX_DAYS} días)')
 
     # ── Construir el Excel final copiando estructura del nuevo reporte ─────────
-    shutil.copy(LATEST, HIST)
+    # Usar como plantilla el primer archivo disponible (bulk_0.xlsx o latest.xlsx)
+    template = source_files[0]
+    shutil.copy(template, HIST)
     wb_out = openpyxl.load_workbook(HIST)
     ws_out = wb_out['Detalle 1']
     hr_out, col_out = get_header_row(ws_out)
