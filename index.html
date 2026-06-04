@@ -561,9 +561,24 @@ function rebuildAggregates() {
 function renderFlota() {
   destroyCharts(['cTend','cHoras','cDias','cVelDist']);
 
-  const total      = G.rows.length;
-  const globalMax  = Math.max(...G.rows.map(r=>r.velMax));
-  const globalProm = G.rows.reduce((a,r)=>a+r.velProm,0)/total;
+  const total = G.rows.length;
+
+  // Sin datos: mostrar mensaje amigable y salir
+  if (total === 0) {
+    const disponibles = G.allRows.map(r=>(r.fechaStr||'').replace(/\//g,'-')).filter(Boolean).sort();
+    const dMin = disponibles[0] || '', dMax = disponibles[disponibles.length-1] || '';
+    document.getElementById('tab-flota').innerHTML = `
+      <div class="main"><div class="card" style="text-align:center;padding:48px 24px;">
+        <div style="font-size:36px;margin-bottom:12px;">📭</div>
+        <div class="card-title" style="font-size:16px;margin-bottom:8px;">Sin datos en el período seleccionado</div>
+        <div class="card-sub">Datos disponibles en este reporte: <strong>${fmtDate(dMin)} — ${fmtDate(dMax)}</strong></div>
+        <div class="card-sub" style="margin-top:6px;">Ajusta el rango o selecciona <strong>Últimos 7 días</strong></div>
+      </div></div>`;
+    return;
+  }
+
+  const globalMax  = G.rows.length ? Math.max(...G.rows.map(r=>r.velMax)) : 0;
+  const globalProm = total ? G.rows.reduce((a,r)=>a+r.velProm,0)/total : 0;
   const nCond      = Object.keys(G.conductores).length;
   const nVeh       = Object.keys(G.vehiculos).length;
 
@@ -708,6 +723,7 @@ function renderFlota() {
 // ══════════════════════════════════════════════════════
 function renderConductorTab() {
   const names = Object.keys(G.conductores);
+  if (!names.length) { document.getElementById('tab-conductor').innerHTML = ''; return; }
   const btns = names.map((n,i)=>`<button class="sel-btn${i===0?' active':''}" onclick="selectConductor(this,'${n}')">${n}</button>`).join('');
   document.getElementById('tab-conductor').innerHTML = `
   <div class="main">
@@ -825,6 +841,7 @@ function renderConductorPanel(name) {
 // ══════════════════════════════════════════════════════
 function renderVehiculoTab() {
   const aliases = Object.keys(G.vehiculos);
+  if (!aliases.length) { document.getElementById('tab-vehiculo').innerHTML = ''; return; }
   const btns = aliases.map((a,i)=>`<button class="sel-btn${i===0?' active':''}" onclick="selectVehiculo(this,'${a}')">${extractPlaca(a)}</button>`).join('');
   document.getElementById('tab-vehiculo').innerHTML = `
   <div class="main">
