@@ -254,7 +254,7 @@ function generateHTML(s) {
   const hourCounts = JSON.stringify(s.topHours.map(h => h.count));
   const hourColors = JSON.stringify(s.topHours.map((_,i) => i===0?'#2d3748':i<3?'#4a5568':'#94a3b8'));
 
-  const footerText = `Tracklink Chile Fleet Dashboard By Würfel SpA · Reporte · ${s.totalIncidencias} eventos · generado automáticamente por IA`;
+  const footerText = `Tracklink Chile Fleet Dashboard By Würfel SPA · Reporte · ${s.totalIncidencias} eventos · generado automáticamente por IA`;
   const footer     = `<div class="tl-footer">${footerText}</div>`;
 
   const peakHourLabel = s.topHours[0]?.label || '—';
@@ -403,7 +403,7 @@ function generateHTML(s) {
         <circle cx="13" cy="134" r="10" fill="#1e3a5f" opacity=".5"/><circle cx="50" cy="134" r="10" fill="#1e3a5f" opacity=".5"/>
       </svg>
       <div style="position:absolute;bottom:-8px;left:0;right:0;text-align:center;color:#fff;font-size:9px;opacity:.5;letter-spacing:.02em">
-        Tracklink Chile Fleet Dashboard By Würfel SpA · generado automáticamente por IA
+        Tracklink Chile Fleet Dashboard By Würfel SPA · generado automáticamente por IA
       </div>
     </div>
   </div>
