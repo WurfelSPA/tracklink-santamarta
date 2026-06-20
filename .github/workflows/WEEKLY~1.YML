@@ -1,0 +1,127 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# GitHub Action: Descarga semanal + Generación automática de PDF
+# Flota Santa Marta — Tracklink Chile
+#
+# Corre cada domingo a las 23:30 CLT (03:30 UTC del lunes siguiente).
+# Flujo completo:
+#   1. Descarga datos TrackGTS para Lun–Dom de la semana anterior
+#   2. Fusiona con historial (merge_history.py)
+#   3. Genera el PDF del reporte
+#   4. Hace commit de Excel + PDF al repo
+#
+# Secrets requeridos (Settings → Secrets → Actions):
+#   TL_USER     → usuario TrackGTS
+#   TL_PASSWORD → contraseña TrackGTS
+#   TL_DOMAIN   → subdominio (la parte antes de .trackgts.com)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Descarga y Reporte Semanal
+
+on:
+  schedule:
+    # 03:30 UTC = 23:30 CLT (UTC-4) cada domingo
+    - cron: '30 3 * * 1'
+
+  # Ejecución manual desde GitHub Actions (útil para pruebas)
+  workflow_dispatch:
+    inputs:
+      override_start:
+        description: 'Fecha inicio YYYY-MM-DD (opcional)'
+        required: false
+      override_end:
+        description: 'Fecha fin YYYY-MM-DD (opcional)'
+        required: false
+
+jobs:
+  generar-reporte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      # ── Calcular rango Lun–Dom de la semana anterior ─────────────────────
+      - name: Calcular rango de fechas
+        id: dates
+        run: |
+          python3 << 'EOF'
+          import os
+          from datetime import datetime, timedelta
+
+          start_override = os.environ.get('INPUT_OVERRIDE_START', '').strip()
+          end_override   = os.environ.get('INPUT_OVERRIDE_END',   '').strip()
+
+          if start_override and end_override:
+              start_str = start_override
+              end_str   = end_override
+          else:
+              today        = datetime.utcnow()
+              prev_monday  = today - timedelta(days=7)
+              prev_sunday  = prev_monday + timedelta(days=6)
+              start_str    = prev_monday.strftime('%Y-%m-%d')
+              end_str      = prev_sunday.strftime('%Y-%m-%d')
+
+          print(f"Rango: {start_str} → {end_str}")
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"start={start_str}\n")
+              f.write(f"end={end_str}\n")
+              f.write(f"tl_start={start_str.replace('-','/')} 00:00:00\n")
+              f.write(f"tl_end={end_str.replace('-','/')} 23:59:59\n")
+          EOF
+        env:
+          INPUT_OVERRIDE_START: ${{ github.event.inputs.override_start }}
+          INPUT_OVERRIDE_END:   ${{ github.event.inputs.override_end }}
+
+      # ── Node.js ──────────────────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias Node
+        run: npm install puppeteer adm-zip xlsx
+        timeout-minutes: 5
+
+      # ── Descargar datos de TrackGTS ──────────────────────────────────────────
+      - name: Descargar reporte TrackGTS
+        env:
+          TL_USER:     ${{ secrets.TL_USER }}
+          TL_PASSWORD: ${{ secrets.TL_PASSWORD }}
+          TL_DOMAIN:   ${{ secrets.TL_DOMAIN }}
+          TL_START:    ${{ steps.dates.outputs.tl_start }}
+          TL_END:      ${{ steps.dates.outputs.tl_end }}
+        run: node download-weekly.js
+        timeout-minutes: 8
+
+      # ── Fusionar con historial ───────────────────────────────────────────────
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias Python
+        run: pip install openpyxl
+
+      - name: Fusionar con historial
+        run: python3 merge_history.py
+
+      # ── Generar PDF ─────────────────────────────────────────────────────────
+      - name: Generar PDF del reporte
+        env:
+          REPORT_START: ${{ steps.dates.outputs.start }}
+          REPORT_END:   ${{ steps.dates.outputs.end }}
+        run: node generate-pdf.js
+        timeout-minutes: 5
+
+      # ── Commit Excel + PDF ──────────────────────────────────────────────────
+      - name: Commit y push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "INFORME EXCESOS DE VELOCIDAD.xlsx" "reporte-semanal.pdf"
+          git diff --staged --quiet \
+            && echo "Sin cambios — nada que commitear." \
+            || git commit -m "auto: reporte semana ${{ steps.dates.outputs.start }} → ${{ steps.dates.outputs.end }}"
+          git push
