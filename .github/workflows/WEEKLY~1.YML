@@ -1,0 +1,122 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# GitHub Action: Descarga semanal de datos TrackLink (Lunes a Domingo)
+#
+# Corre cada domingo a las 23:30 CLT (03:30 UTC del lunes siguiente).
+# Descarga el Excel del período Lun–Dom de la semana que termina,
+# ejecuta merge_history.py para actualizar el historial y hace commit.
+# Así, cuando el flujo n8n se ejecute el lunes a las 7am, el Excel ya está
+# actualizado con todos los datos de la semana anterior.
+#
+# Secrets requeridos en el repo:
+#   TL_USER     → usuario TrackGTS
+#   TL_PASSWORD → contraseña TrackGTS
+#   TL_DOMAIN   → dominio (la parte antes de .trackgts.com)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Descarga Semanal TrackLink
+
+on:
+  schedule:
+    # 03:30 UTC = 23:30 CLT (UTC-4) cada domingo
+    - cron: '30 3 * * 1'
+
+  # Permite ejecutar manualmente desde GitHub Actions
+  workflow_dispatch:
+    inputs:
+      override_start:
+        description: 'Fecha inicio (YYYY-MM-DD, opcional - sobreescribe el cálculo automático)'
+        required: false
+      override_end:
+        description: 'Fecha fin (YYYY-MM-DD, opcional)'
+        required: false
+
+jobs:
+  download-and-update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      # ── Calcular rango Lun–Dom de la semana anterior ────────────────────────
+      - name: Calcular rango de fechas
+        id: dates
+        run: |
+          python3 << 'EOF'
+          import os
+          from datetime import datetime, timedelta
+
+          # Si se pasaron fechas manuales, usarlas
+          start_override = os.environ.get('INPUT_OVERRIDE_START', '').strip()
+          end_override   = os.environ.get('INPUT_OVERRIDE_END',   '').strip()
+
+          if start_override and end_override:
+              start_str = start_override
+              end_str   = end_override
+          else:
+              # Hoy es lunes (la action corre domingo noche UTC = lunes madrugada UTC)
+              today = datetime.utcnow()
+              # Lunes de la semana anterior = hoy - 7 días
+              prev_monday = today - timedelta(days=7)
+              prev_sunday = prev_monday + timedelta(days=6)
+              start_str = prev_monday.strftime('%Y-%m-%d')
+              end_str   = prev_sunday.strftime('%Y-%m-%d')
+
+          print(f"Rango calculado: {start_str} → {end_str}")
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"start={start_str}\n")
+              f.write(f"end={end_str}\n")
+              # Formato TrackGTS: YYYY/MM/DD HH:MM:SS
+              f.write(f"tl_start={start_str.replace('-','/')} 00:00:00\n")
+              f.write(f"tl_end={end_str.replace('-','/')} 23:59:59\n")
+          EOF
+        env:
+          INPUT_OVERRIDE_START: ${{ github.event.inputs.override_start }}
+          INPUT_OVERRIDE_END:   ${{ github.event.inputs.override_end }}
+
+      # ── Node.js para el script de descarga ──────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias Node
+        run: |
+          npm install puppeteer adm-zip
+          # Puppeteer descarga Chromium automáticamente
+        timeout-minutes: 5
+
+      # ── Descargar el Excel de TrackGTS ──────────────────────────────────────
+      - name: Descargar reporte TrackGTS
+        env:
+          TL_USER:     ${{ secrets.TL_USER }}
+          TL_PASSWORD: ${{ secrets.TL_PASSWORD }}
+          TL_DOMAIN:   ${{ secrets.TL_DOMAIN }}
+          TL_START:    ${{ steps.dates.outputs.tl_start }}
+          TL_END:      ${{ steps.dates.outputs.tl_end }}
+        run: node download-weekly.js
+        timeout-minutes: 8
+
+      # ── Python: fusionar con historial ──────────────────────────────────────
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias Python
+        run: pip install openpyxl
+
+      - name: Fusionar con historial (merge_history.py)
+        run: python3 merge_history.py
+
+      # ── Commit del Excel actualizado ────────────────────────────────────────
+      - name: Commit y push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "INFORME EXCESOS DE VELOCIDAD.xlsx"
+          git diff --staged --quiet && echo "Sin cambios — nada que commitear." || \
+            git commit -m "auto: datos semana ${{ steps.dates.outputs.start }} → ${{ steps.dates.outputs.end }}"
+          git push
