@@ -1,45 +1,48 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# GitHub Action: Descarga semanal de datos TrackLink (Lunes a Domingo)
+# GitHub Action: Descarga semanal + Generación automática de PDF
+# Flota Santa Marta — Tracklink Chile
 #
 # Corre cada domingo a las 23:30 CLT (03:30 UTC del lunes siguiente).
-# Descarga el Excel del período Lun–Dom de la semana que termina,
-# ejecuta merge_history.py para actualizar el historial y hace commit.
-# Así, cuando el flujo n8n se ejecute el lunes a las 7am, el Excel ya está
-# actualizado con todos los datos de la semana anterior.
+# Flujo completo:
+#   1. Descarga datos TrackGTS para Lun–Dom de la semana anterior
+#   2. Fusiona con historial (merge_history.py)
+#   3. Genera el PDF del reporte
+#   4. Hace commit de Excel + PDF al repo
 #
-# Secrets requeridos en el repo:
+# Secrets requeridos (Settings → Secrets → Actions):
 #   TL_USER     → usuario TrackGTS
 #   TL_PASSWORD → contraseña TrackGTS
-#   TL_DOMAIN   → dominio (la parte antes de .trackgts.com)
+#   TL_DOMAIN   → subdominio (la parte antes de .trackgts.com)
 # ─────────────────────────────────────────────────────────────────────────────
 
-name: Descarga Semanal TrackLink
+name: Descarga y Reporte Semanal
 
 on:
   schedule:
     # 03:30 UTC = 23:30 CLT (UTC-4) cada domingo
     - cron: '30 3 * * 1'
 
-  # Permite ejecutar manualmente desde GitHub Actions
+  # Ejecución manual desde GitHub Actions (útil para pruebas)
   workflow_dispatch:
     inputs:
       override_start:
-        description: 'Fecha inicio (YYYY-MM-DD, opcional - sobreescribe el cálculo automático)'
+        description: 'Fecha inicio YYYY-MM-DD (opcional)'
         required: false
       override_end:
-        description: 'Fecha fin (YYYY-MM-DD, opcional)'
+        description: 'Fecha fin YYYY-MM-DD (opcional)'
         required: false
 
 jobs:
-  download-and-update:
+  generar-reporte:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
       - name: Checkout repositorio
         uses: actions/checkout@v4
 
-      # ── Calcular rango Lun–Dom de la semana anterior ────────────────────────
+      # ── Calcular rango Lun–Dom de la semana anterior ─────────────────────
       - name: Calcular rango de fechas
         id: dates
         run: |
@@ -47,7 +50,6 @@ jobs:
           import os
           from datetime import datetime, timedelta
 
-          # Si se pasaron fechas manuales, usarlas
           start_override = os.environ.get('INPUT_OVERRIDE_START', '').strip()
           end_override   = os.environ.get('INPUT_OVERRIDE_END',   '').strip()
 
@@ -55,20 +57,16 @@ jobs:
               start_str = start_override
               end_str   = end_override
           else:
-              # Hoy es lunes (la action corre domingo noche UTC = lunes madrugada UTC)
-              today = datetime.utcnow()
-              # Lunes de la semana anterior = hoy - 7 días
-              prev_monday = today - timedelta(days=7)
-              prev_sunday = prev_monday + timedelta(days=6)
-              start_str = prev_monday.strftime('%Y-%m-%d')
-              end_str   = prev_sunday.strftime('%Y-%m-%d')
+              today        = datetime.utcnow()
+              prev_monday  = today - timedelta(days=7)
+              prev_sunday  = prev_monday + timedelta(days=6)
+              start_str    = prev_monday.strftime('%Y-%m-%d')
+              end_str      = prev_sunday.strftime('%Y-%m-%d')
 
-          print(f"Rango calculado: {start_str} → {end_str}")
-
+          print(f"Rango: {start_str} → {end_str}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f"start={start_str}\n")
               f.write(f"end={end_str}\n")
-              # Formato TrackGTS: YYYY/MM/DD HH:MM:SS
               f.write(f"tl_start={start_str.replace('-','/')} 00:00:00\n")
               f.write(f"tl_end={end_str.replace('-','/')} 23:59:59\n")
           EOF
@@ -76,19 +74,17 @@ jobs:
           INPUT_OVERRIDE_START: ${{ github.event.inputs.override_start }}
           INPUT_OVERRIDE_END:   ${{ github.event.inputs.override_end }}
 
-      # ── Node.js para el script de descarga ──────────────────────────────────
+      # ── Node.js ──────────────────────────────────────────────────────────────
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Instalar dependencias Node
-        run: |
-          npm install puppeteer adm-zip
-          # Puppeteer descarga Chromium automáticamente
+        run: npm install puppeteer adm-zip xlsx
         timeout-minutes: 5
 
-      # ── Descargar el Excel de TrackGTS ──────────────────────────────────────
+      # ── Descargar datos de TrackGTS ──────────────────────────────────────────
       - name: Descargar reporte TrackGTS
         env:
           TL_USER:     ${{ secrets.TL_USER }}
@@ -99,7 +95,7 @@ jobs:
         run: node download-weekly.js
         timeout-minutes: 8
 
-      # ── Python: fusionar con historial ──────────────────────────────────────
+      # ── Fusionar con historial ───────────────────────────────────────────────
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -108,15 +104,24 @@ jobs:
       - name: Instalar dependencias Python
         run: pip install openpyxl
 
-      - name: Fusionar con historial (merge_history.py)
+      - name: Fusionar con historial
         run: python3 merge_history.py
 
-      # ── Commit del Excel actualizado ────────────────────────────────────────
+      # ── Generar PDF ─────────────────────────────────────────────────────────
+      - name: Generar PDF del reporte
+        env:
+          REPORT_START: ${{ steps.dates.outputs.start }}
+          REPORT_END:   ${{ steps.dates.outputs.end }}
+        run: node generate-pdf.js
+        timeout-minutes: 5
+
+      # ── Commit Excel + PDF ──────────────────────────────────────────────────
       - name: Commit y push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "INFORME EXCESOS DE VELOCIDAD.xlsx"
-          git diff --staged --quiet && echo "Sin cambios — nada que commitear." || \
-            git commit -m "auto: datos semana ${{ steps.dates.outputs.start }} → ${{ steps.dates.outputs.end }}"
+          git add "INFORME EXCESOS DE VELOCIDAD.xlsx" "reporte-semanal.pdf"
+          git diff --staged --quiet \
+            && echo "Sin cambios — nada que commitear." \
+            || git commit -m "auto: reporte semana ${{ steps.dates.outputs.start }} → ${{ steps.dates.outputs.end }}"
           git push
