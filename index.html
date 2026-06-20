@@ -271,6 +271,19 @@ const CLIENT_NAME       = 'SANTA MARTA';
 // ══════════════════════════════════════════════════════
 const PALETTE = ['#1a3a6b','#f5a623','#5b9cf6','#a78bfa','#f04545','#22d3e0','#fb7185'];
 
+// Lista completa de vehículos monitoreados (se muestran aunque no tengan excesos)
+const KNOWN_VEHICLES = [
+  'MITSUBISHI L200 GZVW-11',
+  'TOYOTA HILUX PDRD-37',
+  'TOYOTA HILUX RRTG-36',
+  'TOYOTA HILUX SVLG-14',
+  'TOYOTA HILUX TRHJ-20',
+  'TOYOTA HILUX VTGL-55',
+  'TOYOTA HILUX VTGL-56',
+  'TOYOTA HILUX VTGR-51',
+  'TOYOTA RRTG-35 BIOGAS',
+];
+
 // ══════════════════════════════════════════════════════
 // ESTADO GLOBAL
 // ══════════════════════════════════════════════════════
@@ -611,7 +624,7 @@ function renderFlota() {
         <div class="kpi" style="--accent:var(--amber);"><div class="kpi-label">Vel. Máxima</div><div class="kpi-value" style="--kv:var(--amber);">${globalMax.toFixed(1)}</div><div class="kpi-sub">km/h registrada</div></div>
         <div class="kpi" style="--accent:var(--lime);"><div class="kpi-label">Vel. Promedio</div><div class="kpi-value" style="--kv:var(--lime);">${globalProm.toFixed(1)}</div><div class="kpi-sub">km/h en exceso</div></div>
         <div class="kpi" style="--accent:var(--blue);"><div class="kpi-label">Conductores</div><div class="kpi-value" style="--kv:var(--blue);">${nCond}</div><div class="kpi-sub">activos</div></div>
-        <div class="kpi" style="--accent:#a78bfa;"><div class="kpi-label">Vehículos</div><div class="kpi-value" style="--kv:#a78bfa;">${nVeh}</div><div class="kpi-sub">con registros</div></div>
+        <div class="kpi" style="--accent:#a78bfa;"><div class="kpi-label">Vehículos</div><div class="kpi-value" style="--kv:#a78bfa;">${KNOWN_VEHICLES.length}</div><div class="kpi-sub">${nVeh} con excesos</div></div>
       </div>
     </div>
 
@@ -654,6 +667,36 @@ function renderFlota() {
             <td><span class="mono-sm">${c.velProm.toFixed(1)} km/h</span></td>
             <td style="width:200px;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--ink3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.round(c.excesos/ranking[0].excesos*100)}%;background:${c.color};border-radius:3px;"></div></div><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">${Math.round(c.excesos/ranking[0].excesos*100)}%</span></div></td>
           </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-head" style="margin-bottom:14px;"><div><div class="card-title">Flota monitoreada</div><div class="card-sub">Todos los vehículos del período · ${KNOWN_VEHICLES.length} unidades</div></div></div>
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Vehículo</th><th>Excesos</th><th>Vel. Máx</th><th>Vel. Prom</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${(()=>{
+            const maxExc = Math.max(...KNOWN_VEHICLES.map(a=>G.vehiculos[a]?.excesos||0), 1);
+            return KNOWN_VEHICLES.map((alias, i) => {
+              const v = G.vehiculos[alias];
+              const exc = v?.excesos || 0;
+              const vMax = v?.velMax || 0;
+              const vProm = v?.velProm || 0;
+              const color = exc === 0 ? 'var(--muted2)' : PALETTE[i % PALETTE.length];
+              const estado = exc === 0
+                ? `<span style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#16a34a;background:rgba(22,163,74,.10);padding:3px 8px;border-radius:4px;">SIN EXCESOS</span>`
+                : `<div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;max-width:120px;height:5px;background:var(--ink3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.round(exc/maxExc*100)}%;background:${color};border-radius:3px;"></div></div><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">${Math.round(exc/maxExc*100)}%</span></div>`;
+              return `<tr>
+                <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);">${i+1}</span></td>
+                <td><span style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:${color};">${extractPlaca(alias)}</span><span style="font-size:10px;color:var(--muted2);margin-left:6px;">${alias.replace(extractPlaca(alias),'').trim()}</span></td>
+                <td><span style="font-family:'Space Mono',monospace;font-weight:700;color:${exc===0?'var(--muted2)':exc>100?'var(--red)':exc>50?'var(--amber)':'var(--lime)'};">${exc}</span></td>
+                <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:${vMax>=60?'var(--red)':vMax>=45?'var(--amber)':'var(--muted2)'};">${vMax>0?vMax.toFixed(1)+' km/h':'—'}</span></td>
+                <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${vProm>0?vProm.toFixed(1)+' km/h':'—'}</span></td>
+                <td>${estado}</td>
+              </tr>`;
+            }).join('');
+          })()}
         </tbody>
       </table>
     </div>
