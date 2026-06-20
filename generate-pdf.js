@@ -244,7 +244,7 @@ function formatDateTime(d) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HTML
+// HTML — 3 páginas A4 landscape
 // ─────────────────────────────────────────────────────────────────────────────
 function generateHTML(s) {
   const dayLabels  = JSON.stringify(s.weekDays.map(d => d.label));
@@ -254,8 +254,8 @@ function generateHTML(s) {
   const hourCounts = JSON.stringify(s.topHours.map(h => h.count));
   const hourColors = JSON.stringify(s.topHours.map((_,i) => i===0?'#2d3748':i<3?'#4a5568':'#94a3b8'));
 
-  const footerText   = `Tracklink Chile Fleet Dashboard By Würfel SpA · Reporte · ${s.totalIncidencias} eventos · generado automáticamente por IA`;
-  const footer       = `<div class="tl-footer">${footerText}</div>`;
+  const footerText = `Tracklink Chile Fleet Dashboard By Würfel SpA · Reporte · ${s.totalIncidencias} eventos · generado automáticamente por IA`;
+  const footer     = `<div class="tl-footer">${footerText}</div>`;
 
   const peakHourLabel = s.topHours[0]?.label || '—';
   const peakHourCount = s.topHours[0]?.count || 0;
@@ -279,12 +279,12 @@ function generateHTML(s) {
     </div>`).join('');
 
   const conducInsight = s.conductoresArr.length >= 2 ? `
-    <div class="alert alert-red">
+    <div class="alert alert-red" style="margin-top:10px">
       <span>⊗</span>
       <div>${s.conductoresArr[0].name} lidera con ${s.conductoresArr[0].count} excesos (${s.conductoresArr[0].pct}%).
       ${Math.abs(s.conductoresArr[0].count - s.conductoresArr[1].count) < s.conductoresArr[0].count*0.12
-        ? ' Ambos conductores presentan una distribución casi equitativa de infracciones, lo que indica un patrón sistemático en ambas unidades.'
-        : ` La diferencia entre conductores es de ${s.conductoresArr[0].count - s.conductoresArr[1].count} incidencias.`}
+        ? ' Ambos conductores presentan distribución casi equitativa, lo que indica un patrón sistemático.'
+        : ` Diferencia entre conductores: ${s.conductoresArr[0].count - s.conductoresArr[1].count} incidencias.`}
       </div>
     </div>` : '';
 
@@ -300,69 +300,77 @@ function generateHTML(s) {
   .page { width:297mm; height:210mm; position:relative; overflow:hidden; page-break-after:always; background:#fff; }
   .page:last-child { page-break-after:avoid; }
 
-  /* Portada */
+  /* ── Portada ─────────────────────────────────────────────────────────── */
   .cover { display:flex; }
   .cv-left { width:54%; padding:44px 48px; display:flex; flex-direction:column; justify-content:space-between; }
   .cv-right { width:46%; background:linear-gradient(145deg,#1a3352 0%,#1e4080 40%,#0f2340 100%); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
   .cv-right::after { content:''; position:absolute; inset:0; background:repeating-linear-gradient(-45deg,transparent,transparent 28px,rgba(255,255,255,.025) 28px,rgba(255,255,255,.025) 56px); }
-  .cv-title { font-size:36px; font-weight:800; color:#1a202c; line-height:1.1; margin-bottom:14px; }
-  .cv-sub   { font-size:13.5px; font-weight:700; color:#4a5568; margin-bottom:18px; }
-  .cv-desc  { font-size:12.5px; color:#718096; line-height:1.65; max-width:370px; }
+  .cv-title  { font-size:36px; font-weight:800; color:#1a202c; line-height:1.1; margin-bottom:14px; }
+  .cv-sub    { font-size:13.5px; font-weight:700; color:#4a5568; margin-bottom:18px; }
+  .cv-desc   { font-size:12.5px; color:#718096; line-height:1.65; max-width:370px; }
   .cv-badges { display:flex; gap:8px; margin-top:20px; flex-wrap:wrap; }
   .badge { background:#f7fafc; border:1px solid #e2e8f0; padding:5px 13px; font-size:10.5px; font-weight:700; color:#4a5568; letter-spacing:.06em; }
 
-  /* Interior */
-  .pi { padding:36px 48px 28px; height:100%; display:flex; flex-direction:column; }
-  .pg-title { font-size:26px; font-weight:800; color:#1a202c; margin-bottom:6px; }
-  .pg-sub   { font-size:12px; color:#718096; margin-bottom:24px; }
-  .pf { position:absolute; bottom:16px; left:0; right:0; display:flex; justify-content:center; }
+  /* ── Interior pages ──────────────────────────────────────────────────── */
+  .pi { padding:24px 40px 34px; height:100%; display:flex; flex-direction:column; }
+  .pg-title { font-size:19px; font-weight:800; color:#1a202c; margin-bottom:14px; }
+  .pf { position:absolute; bottom:13px; left:0; right:0; display:flex; justify-content:center; }
   .tl-footer { font-size:9.5px; color:#94a3b8; letter-spacing:.03em; text-align:center; }
 
-  /* KPIs */
-  .kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; flex:1; margin-bottom:14px; }
-  .kpi { border:1px solid #e2e8f0; border-radius:8px; padding:22px 26px; display:flex; flex-direction:column; justify-content:center; }
-  .kpi-val  { font-size:50px; font-weight:800; color:#2d3748; line-height:1; margin-bottom:5px; }
-  .kpi-lbl  { font-size:14px; font-weight:700; color:#4a5568; margin-bottom:5px; }
-  .kpi-desc { font-size:11.5px; color:#718096; line-height:1.45; }
-
-  /* Alertas */
-  .alert { padding:12px 16px; display:flex; gap:10px; align-items:flex-start; font-size:12px; line-height:1.5; border-radius:6px; }
-  .alert span { flex-shrink:0; font-size:14px; margin-top:1px; }
+  /* ── Alertas ─────────────────────────────────────────────────────────── */
+  .alert { padding:8px 12px; display:flex; gap:8px; align-items:flex-start; font-size:11px; line-height:1.4; border-radius:6px; }
+  .alert span { flex-shrink:0; font-size:13px; margin-top:1px; }
   .alert-yellow { background:#fefce8; border-left:4px solid #eab308; }
   .alert-red    { background:#fff5f5; border-left:4px solid #fc8181; }
   .alert-blue   { background:#eff6ff; border-left:4px solid #93c5fd; }
 
-  /* Conductores */
-  .conductores-row { display:flex; gap:20px; flex:1; }
-  .conductor-card { flex:1; border-radius:8px; padding:22px 24px; }
+  /* ── Página 2: Layout dos columnas ──────────────────────────────────── */
+  .two-col { display:flex; gap:22px; flex:1; min-height:0; }
+  .col { display:flex; flex-direction:column; min-height:0; }
+  .col-left  { width:51%; }
+  .col-right { width:49%; }
+  .col-title { font-size:11px; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.06em; margin-bottom:9px; padding-bottom:6px; border-bottom:2px solid #e2e8f0; }
+
+  /* ── KPIs (compactos) ────────────────────────────────────────────────── */
+  .kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; flex:1; margin-bottom:9px; }
+  .kpi { border:1px solid #e2e8f0; border-radius:7px; padding:12px 15px; display:flex; flex-direction:column; justify-content:center; }
+  .kpi-val  { font-size:36px; font-weight:800; color:#2d3748; line-height:1; margin-bottom:3px; }
+  .kpi-lbl  { font-size:11.5px; font-weight:700; color:#4a5568; margin-bottom:2px; }
+  .kpi-desc { font-size:10px; color:#718096; line-height:1.4; }
+
+  /* ── Conductores (compactos) ─────────────────────────────────────────── */
+  .conductores-col { display:flex; flex-direction:column; gap:10px; flex:1; }
+  .conductor-card { border-radius:7px; padding:12px 14px; }
   .c-dark  { background:#374151; color:#fff; }
   .c-light { background:#fff; border:1px solid #e2e8f0; color:#1a202c; }
-  .c-name { font-size:19px; font-weight:700; margin-bottom:4px; }
-  .c-vehicle { font-size:11.5px; opacity:.7; margin-bottom:18px; }
-  .c-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .c-stat { padding:13px; border-radius:6px; }
+  .c-name    { font-size:14px; font-weight:700; margin-bottom:2px; }
+  .c-vehicle { font-size:10px; opacity:.7; margin-bottom:9px; }
+  .c-stats   { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .c-stat    { padding:8px 10px; border-radius:5px; }
   .c-dark  .c-stat { background:rgba(255,255,255,.1); }
   .c-light .c-stat { background:#f8fafc; }
-  .c-stat-val { font-size:20px; font-weight:700; margin-bottom:3px; }
-  .c-stat-lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:2px; }
-  .c-stat-sub { font-size:10.5px; opacity:.65; line-height:1.3; }
+  .c-stat-val { font-size:16px; font-weight:700; margin-bottom:2px; }
+  .c-stat-lbl { font-size:8.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:1px; }
+  .c-stat-sub { font-size:9px; opacity:.65; line-height:1.3; }
 
-  /* Charts */
-  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:28px; flex:1; }
-  .chart-sec h3 { font-size:14px; font-weight:700; color:#2d3748; margin-bottom:10px; }
-  .chart-wrap { position:relative; height:135px; }
-  .chart-note { font-size:11.5px; color:#718096; line-height:1.5; margin-top:8px; }
+  /* ── Página 3: Charts (compactos) ────────────────────────────────────── */
+  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:10px; }
+  .chart-sec h3 { font-size:11.5px; font-weight:700; color:#2d3748; margin-bottom:6px; }
+  .chart-wrap   { position:relative; height:100px; }
+  .chart-note   { font-size:10px; color:#718096; line-height:1.4; margin-top:5px; }
 
-  /* Conclusiones */
-  .concl-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; flex:1; margin-bottom:14px; }
-  .concl-card { border:1px solid #e2e8f0; border-left:4px solid #2d3748; border-radius:0 8px 8px 0; padding:18px 18px 18px 20px; }
-  .concl-card h4 { font-size:13px; font-weight:700; color:#2d3748; margin-bottom:6px; }
-  .concl-card p  { font-size:11.5px; color:#718096; line-height:1.6; }
+  /* ── Conclusiones (compactas) ────────────────────────────────────────── */
+  .concl-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; flex:1; margin-bottom:9px; }
+  .concl-card { border:1px solid #e2e8f0; border-left:4px solid #2d3748; border-radius:0 6px 6px 0; padding:9px 11px 9px 12px; }
+  .concl-card h4 { font-size:11px; font-weight:700; color:#2d3748; margin-bottom:3px; }
+  .concl-card p  { font-size:10px; color:#718096; line-height:1.5; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head><body>
 
-<!-- PORTADA -->
+<!-- ══════════════════════════════════════════════════════════════════════
+     PÁGINA 1 — PORTADA
+══════════════════════════════════════════════════════════════════════════ -->
 <div class="page cover">
   <div class="cv-left">
     <div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:#1a202c">TRACKLINK<span style="color:#d97706">⋘</span></div>
@@ -401,86 +409,88 @@ function generateHTML(s) {
   </div>
 </div>
 
-<!-- RESUMEN EJECUTIVO -->
+<!-- ══════════════════════════════════════════════════════════════════════
+     PÁGINA 2 — RESUMEN EJECUTIVO + CONDUCTORES
+══════════════════════════════════════════════════════════════════════════ -->
 <div class="page"><div class="pi">
-  <h2 class="pg-title">Resumen Ejecutivo</h2>
-  <p class="pg-sub">Los indicadores clave del período reflejan la concentración de incidencias en las unidades operativas.</p>
-  <div class="kpi-grid">
-    <div class="kpi">
-      <div class="kpi-val">${s.totalIncidencias}</div>
-      <div class="kpi-lbl">Total de excesos</div>
-      <div class="kpi-desc">Incidencias registradas del ${s.startDisplay} al ${s.endDisplay}</div>
+  <h2 class="pg-title">Resumen Ejecutivo · Análisis por Conductor</h2>
+  <div class="two-col">
+
+    <!-- Columna izquierda: KPIs -->
+    <div class="col col-left">
+      <div class="col-title">Indicadores del período · ${s.startDisplay} — ${s.endDisplay}</div>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-val">${s.totalIncidencias}</div>
+          <div class="kpi-lbl">Total de excesos</div>
+          <div class="kpi-desc">Incidencias del ${s.startDisplay} al ${s.endDisplay}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val">${s.conductoresArr.length}</div>
+          <div class="kpi-lbl">Conductores</div>
+          <div class="kpi-desc">Con excesos registrados en el período</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val">${s.globalMaxSpeed}</div>
+          <div class="kpi-lbl">Vel. máx. (km/h)</div>
+          <div class="kpi-desc">${s.globalMaxConductor}${s.globalMaxTime!=='—' ? ', '+s.globalMaxTime : ''}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val">${s.peakDay.count}</div>
+          <div class="kpi-lbl">Pico diario</div>
+          <div class="kpi-desc">Excesos el ${s.peakDay.label}, día más activo</div>
+        </div>
+      </div>
+      <div class="alert alert-yellow">
+        <span>⚠</span>
+        <div>Franja más crítica: <strong>${peakHourLabel}</strong> con <strong>${peakHourCount} incidencias</strong>.${s.mananaPct>0 ? ` Bloque 08:00–13:00 concentra el <strong>${s.mananaPct}%</strong> del total.` : ''}</div>
+      </div>
     </div>
-    <div class="kpi">
-      <div class="kpi-val">${s.conductoresArr.length}</div>
-      <div class="kpi-lbl">Conductores</div>
-      <div class="kpi-desc">Conductores con excesos de velocidad registrados en el período</div>
+
+    <!-- Columna derecha: Conductores -->
+    <div class="col col-right">
+      <div class="col-title">Incidencias por conductor</div>
+      <div class="conductores-col">${conductorCards}</div>
+      ${conducInsight}
     </div>
-    <div class="kpi">
-      <div class="kpi-val">${s.globalMaxSpeed}</div>
-      <div class="kpi-lbl">Vel. máx. (km/h)</div>
-      <div class="kpi-desc">Registrada por ${s.globalMaxConductor}${s.globalMaxTime!=='—' ? ' el '+s.globalMaxTime : ''}</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-val">${s.peakDay.count}</div>
-      <div class="kpi-lbl">Pico diario</div>
-      <div class="kpi-desc">Excesos el ${s.peakDay.label} — el día de mayor concentración</div>
-    </div>
-  </div>
-  <div class="alert alert-yellow">
-    <span>⚠</span>
-    <div>La franja horaria más crítica fue <strong>${peakHourLabel}</strong>, con <strong>${peakHourCount} incidencias</strong>.${s.mananaPct>0 ? ` El bloque 08:00–13:00 concentra el <strong>${s.mananaPct}%</strong> del total semanal.` : ''}</div>
+
   </div>
   <div class="pf">${footer}</div>
 </div></div>
 
-<!-- CONDUCTORES -->
+<!-- ══════════════════════════════════════════════════════════════════════
+     PÁGINA 3 — DISTRIBUCIÓN + CONCLUSIONES
+══════════════════════════════════════════════════════════════════════════ -->
 <div class="page"><div class="pi">
-  <h2 class="pg-title">Incidencias y Velocidades por Conductor</h2>
-  <p class="pg-sub">El análisis identifica a los conductores responsables del total de excesos registrados durante el período.</p>
-  <div class="conductores-row">${conductorCards}</div>
-  ${conducInsight}
-  <div class="pf">${footer}</div>
-</div></div>
-
-<!-- DISTRIBUCIÓN -->
-<div class="page"><div class="pi">
-  <h2 class="pg-title">Distribución Diaria y Horaria de Excesos</h2>
+  <h2 class="pg-title">Distribución Horaria · Diaria y Conclusiones</h2>
   <div class="charts-row">
     <div class="chart-sec">
-      <h3>Concentración por día</h3>
+      <h3>Concentración por día de la semana</h3>
       <div class="chart-wrap"><canvas id="chartDays"></canvas></div>
-      <p class="chart-note">El ${s.peakDay.label} concentró el mayor pico con <strong>${s.peakDay.count} excesos</strong>.
-        Días de menor actividad: ${s.sortedDays.slice(-2).reverse().map(d=>d.label+' ('+d.count+')').join(' y ')}.</p>
+      <p class="chart-note">Pico: <strong>${s.peakDay.label}</strong> con <strong>${s.peakDay.count} excesos</strong>. Menor actividad: ${s.sortedDays.slice(-2).reverse().map(d=>d.label+' ('+d.count+')').join(' y ')}.</p>
     </div>
     <div class="chart-sec">
-      <h3>Franjas horarias críticas</h3>
+      <h3>Franjas horarias críticas (top 8)</h3>
       <div class="chart-wrap"><canvas id="chartHours"></canvas></div>
-      <p class="chart-note">La franja <strong>${peakHourLabel}</strong> es la más crítica con <strong>${peakHourCount} incidencias</strong>.${s.mananaPct>0 ? ` El bloque 08:00–13:00 concentra el ${s.mananaPct}% del total.` : ''}</p>
+      <p class="chart-note">Franja más crítica: <strong>${peakHourLabel}</strong> con <strong>${peakHourCount} incidencias</strong>.${s.mananaPct>0 ? ` Bloque 08:00–13:00: ${s.mananaPct}% del total.` : ''}</p>
     </div>
   </div>
-  <div class="pf">${footer}</div>
-</div></div>
-
-<!-- CONCLUSIONES -->
-<div class="page"><div class="pi">
-  <h2 class="pg-title">Conclusiones y Recomendaciones</h2>
   <div class="concl-grid">
     <div class="concl-card">
-      <h4>Intervención inmediata con conductores</h4>
-      <p>${conclusionConductores} deben ser convocados a sesión de retroalimentación individual para reforzar los protocolos de velocidad permitida en ruta.</p>
+      <h4>Intervención con conductores</h4>
+      <p>${conclusionConductores} deben asistir a retroalimentación individual para reforzar protocolos de velocidad permitida en ruta.</p>
     </div>
     <div class="concl-card">
-      <h4>Refuerzo en franja horaria matutina</h4>
-      <p>${s.mananaPct>0 ? `El bloque 08:00–13:00 concentra el ${s.mananaPct}% de los excesos.` : 'La franja matutina concentra la mayor parte de los excesos.'} Se recomienda reforzar recordatorios de conducción segura al inicio del turno.</p>
+      <h4>Refuerzo franja matutina</h4>
+      <p>${s.mananaPct>0 ? `Bloque 08:00–13:00 concentra el ${s.mananaPct}% de los excesos.` : 'La franja matutina concentra la mayor parte de los excesos.'} Reforzar recordatorios al inicio del turno.</p>
     </div>
     <div class="concl-card">
-      <h4>Monitoreo especial días críticos</h4>
-      <p>${diasCriticos} son los días de mayor concentración. Se sugiere implementar alertas automáticas o supervisión activa en esas jornadas para prevenir reincidencias.</p>
+      <h4>Monitoreo días críticos</h4>
+      <p>${diasCriticos} presentaron mayor concentración. Implementar alertas automáticas o supervisión activa en esas jornadas.</p>
     </div>
     <div class="concl-card">
-      <h4>Seguimiento del próximo período</h4>
-      <p>Se recomienda establecer un umbral de tolerancia semanal y comparar los resultados del siguiente informe para medir el impacto de las acciones correctivas.</p>
+      <h4>Seguimiento próximo período</h4>
+      <p>Establecer umbral de tolerancia semanal y comparar con el siguiente informe para medir el impacto de acciones correctivas.</p>
     </div>
   </div>
   <div class="alert alert-blue">
@@ -494,16 +504,16 @@ function generateHTML(s) {
 window.__chartsReady = false;
 (function() {
   Chart.defaults.font.family = "'Segoe UI', system-ui, Arial, sans-serif";
-  Chart.defaults.font.size = 11;
+  Chart.defaults.font.size = 10;
   new Chart(document.getElementById('chartDays').getContext('2d'), {
-    type:'bar', data:{ labels:${dayLabels}, datasets:[{ data:${dayCounts}, backgroundColor:${dayColors}, borderRadius:3, barThickness:26 }] },
+    type:'bar', data:{ labels:${dayLabels}, datasets:[{ data:${dayCounts}, backgroundColor:${dayColors}, borderRadius:3, barThickness:22 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-      scales:{ x:{grid:{display:false},ticks:{font:{size:10},maxRotation:0}}, y:{grid:{color:'#f1f5f9'},ticks:{font:{size:10}},beginAtZero:true} } }
+      scales:{ x:{grid:{display:false},ticks:{font:{size:9},maxRotation:0}}, y:{grid:{color:'#f1f5f9'},ticks:{font:{size:9}},beginAtZero:true} } }
   });
   new Chart(document.getElementById('chartHours').getContext('2d'), {
-    type:'bar', data:{ labels:${hourLabels}, datasets:[{ data:${hourCounts}, backgroundColor:${hourColors}, borderRadius:3, barThickness:14 }] },
+    type:'bar', data:{ labels:${hourLabels}, datasets:[{ data:${hourCounts}, backgroundColor:${hourColors}, borderRadius:3, barThickness:12 }] },
     options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-      scales:{ x:{grid:{color:'#f1f5f9'},ticks:{font:{size:10}},beginAtZero:true}, y:{grid:{display:false},ticks:{font:{size:10}}} } }
+      scales:{ x:{grid:{color:'#f1f5f9'},ticks:{font:{size:9}},beginAtZero:true}, y:{grid:{display:false},ticks:{font:{size:9}}} } }
   });
   window.__chartsReady = true;
 })();
