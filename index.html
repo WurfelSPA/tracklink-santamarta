@@ -180,10 +180,20 @@ canvas{display:block;}
 #filterApply{
   background:var(--lime);color:#fff;border:none;border-radius:6px;
   padding:6px 18px;font-weight:700;font-size:12px;cursor:pointer;
-  font-family:'Epilogue',sans-serif;letter-spacing:.3px;
+  font-family:'Epilogue',sans-serif;letter-spacing:.3px;transition:opacity .15s;
 }
 #filterApply:hover{opacity:.85;}
+#filterApply:disabled{opacity:.5;cursor:not-allowed;}
 #filterCount{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
+/* ── Progress bar ── */
+#filterProgress{
+  position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;
+  background:linear-gradient(90deg,var(--lime) 0%,#5b9cf6 60%,var(--lime) 100%);
+  background-size:200% 100%;
+  animation:progressSlide 1.2s linear infinite;
+  display:none;
+}
+@keyframes progressSlide{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 
 @media(max-width:1100px){
   .kpi-row{grid-template-columns:repeat(3,1fr);}
@@ -193,6 +203,7 @@ canvas{display:block;}
 </head>
 <body>
 
+<div id="filterProgress"></div>
 <!-- CONFIG BANNER -->
 <div id="configBanner">
   <div>
@@ -497,6 +508,23 @@ function onFilterModeChange() {
 }
 
 function applyDateFilter() {
+  // Mostrar barra de progreso y bloquear botón
+  const btn = document.getElementById('filterApply');
+  const bar = document.getElementById('filterProgress');
+  btn.disabled = true;
+  btn.textContent = 'Procesando…';
+  bar.style.display = 'block';
+
+  // Defer el trabajo pesado para que la UI se actualice primero
+  setTimeout(() => {
+    _doApplyDateFilter();
+    bar.style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = 'Actualizar ▶';
+  }, 30);
+}
+
+function _doApplyDateFilter() {
   const mode = document.getElementById('filterMode').value;
   let dLabel = '', hLabel = '';
   let desdeStr = '', hastaStr = ''; // "YYYY-MM-DD" para comparación de strings
