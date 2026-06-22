@@ -254,7 +254,7 @@ function generateHTML(s) {
   const hourCounts = JSON.stringify(s.topHours.map(h => h.count));
   const hourColors = JSON.stringify(s.topHours.map((_,i) => i===0?'#2d3748':i<3?'#4a5568':'#94a3b8'));
 
-  const footerText = `Tracklink Chile Fleet Dashboard By Würfel SPA · Reporte · ${s.totalIncidencias} eventos · generado automáticamente por IA`;
+  const footerText = `Tracklink Chile Fleet Dashboard By Würfel SPA · Flota Santa Marta · ${s.startDisplay} — ${s.endDisplay}`;
   const footer     = `<div class="tl-footer">${footerText}</div>`;
 
   const peakHourLabel = s.topHours[0]?.label || '—';
@@ -332,38 +332,38 @@ function generateHTML(s) {
   .col-title { font-size:11px; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.06em; margin-bottom:9px; padding-bottom:6px; border-bottom:2px solid #e2e8f0; }
 
   /* ── KPIs (compactos) ────────────────────────────────────────────────── */
-  .kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; flex:1; margin-bottom:9px; }
-  .kpi { border:1px solid #e2e8f0; border-radius:7px; padding:12px 15px; display:flex; flex-direction:column; justify-content:center; }
-  .kpi-val  { font-size:36px; font-weight:800; color:#2d3748; line-height:1; margin-bottom:3px; }
-  .kpi-lbl  { font-size:11.5px; font-weight:700; color:#4a5568; margin-bottom:2px; }
-  .kpi-desc { font-size:10px; color:#718096; line-height:1.4; }
+  .kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; flex:1; margin-bottom:10px; }
+  .kpi { border:1px solid #e2e8f0; border-radius:8px; padding:16px 18px; display:flex; flex-direction:column; justify-content:center; }
+  .kpi-val  { font-size:42px; font-weight:800; color:#2d3748; line-height:1; margin-bottom:4px; }
+  .kpi-lbl  { font-size:12.5px; font-weight:700; color:#4a5568; margin-bottom:3px; }
+  .kpi-desc { font-size:10.5px; color:#718096; line-height:1.4; }
 
   /* ── Conductores (compactos) ─────────────────────────────────────────── */
-  .conductores-col { display:flex; flex-direction:column; gap:10px; flex:1; }
-  .conductor-card { border-radius:7px; padding:12px 14px; }
+  .conductores-col { display:flex; flex-direction:column; gap:11px; flex:1; }
+  .conductor-card { border-radius:8px; padding:15px 17px; }
   .c-dark  { background:#374151; color:#fff; }
   .c-light { background:#fff; border:1px solid #e2e8f0; color:#1a202c; }
-  .c-name    { font-size:14px; font-weight:700; margin-bottom:2px; }
-  .c-vehicle { font-size:10px; opacity:.7; margin-bottom:9px; }
-  .c-stats   { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
-  .c-stat    { padding:8px 10px; border-radius:5px; }
+  .c-name    { font-size:15.5px; font-weight:700; margin-bottom:3px; }
+  .c-vehicle { font-size:11px; opacity:.7; margin-bottom:10px; }
+  .c-stats   { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .c-stat    { padding:9px 11px; border-radius:5px; }
   .c-dark  .c-stat { background:rgba(255,255,255,.1); }
   .c-light .c-stat { background:#f8fafc; }
-  .c-stat-val { font-size:16px; font-weight:700; margin-bottom:2px; }
-  .c-stat-lbl { font-size:8.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:1px; }
-  .c-stat-sub { font-size:9px; opacity:.65; line-height:1.3; }
+  .c-stat-val { font-size:18px; font-weight:700; margin-bottom:2px; }
+  .c-stat-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:2px; }
+  .c-stat-sub { font-size:9.5px; opacity:.65; line-height:1.3; }
 
-  /* ── Página 3: Charts (compactos) ────────────────────────────────────── */
-  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:10px; }
-  .chart-sec h3 { font-size:11.5px; font-weight:700; color:#2d3748; margin-bottom:6px; }
-  .chart-wrap   { position:relative; height:100px; }
-  .chart-note   { font-size:10px; color:#718096; line-height:1.4; margin-top:5px; }
+  /* ── Página 3: Charts ────────────────────────────────────────────────── */
+  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:8px; }
+  .chart-sec h3 { font-size:12px; font-weight:700; color:#2d3748; margin-bottom:5px; }
+  .chart-wrap   { position:relative; height:82px; }
+  .chart-note   { font-size:10px; color:#718096; line-height:1.4; margin-top:4px; }
 
-  /* ── Conclusiones (compactas) ────────────────────────────────────────── */
-  .concl-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; flex:1; margin-bottom:9px; }
-  .concl-card { border:1px solid #e2e8f0; border-left:4px solid #2d3748; border-radius:0 6px 6px 0; padding:9px 11px 9px 12px; }
-  .concl-card h4 { font-size:11px; font-weight:700; color:#2d3748; margin-bottom:3px; }
-  .concl-card p  { font-size:10px; color:#718096; line-height:1.5; }
+  /* ── Conclusiones ────────────────────────────────────────────────────── */
+  .concl-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; flex:1; margin-bottom:8px; }
+  .concl-card { border:1px solid #e2e8f0; border-left:5px solid #2d3748; border-radius:0 8px 8px 0; padding:13px 14px 13px 15px; }
+  .concl-card h4 { font-size:12px; font-weight:700; color:#2d3748; margin-bottom:5px; }
+  .concl-card p  { font-size:11px; color:#718096; line-height:1.55; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head><body>
@@ -373,7 +373,17 @@ function generateHTML(s) {
 ══════════════════════════════════════════════════════════════════════════ -->
 <div class="page cover">
   <div class="cv-left">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:#1a202c">TRACKLINK<span style="color:#d97706">⋘</span></div>
+    <div style="display:flex;align-items:center;gap:24px;margin-bottom:4px;">
+      <!-- Logo Consorcio Santa Marta -->
+      <img src="https://raw.githubusercontent.com/WurfelSPA/tracklink-santamarta/main/logo.png"
+           style="height:56px;width:auto;object-fit:contain;" alt="Consorcio Santa Marta">
+      <!-- Logo Tracklink -->
+      <svg width="110" height="28" viewBox="0 0 110 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <text x="0" y="22" font-family="Arial Black,Arial,sans-serif" font-size="20" font-weight="900" fill="#1a202c" letter-spacing="-0.5">TRACK</text>
+        <text x="62" y="22" font-family="Arial Black,Arial,sans-serif" font-size="20" font-weight="900" fill="#2d7be5" letter-spacing="-0.5">LINK</text>
+        <text x="97" y="22" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#2d7be5">⋘</text>
+      </svg>
+    </div>
     <div>
       <h1 class="cv-title">Reporte de Excesos de<br>Velocidad</h1>
       <p class="cv-sub">Flota Santa Marta · Período analizado: ${s.startDisplay} al ${s.endDisplay}</p>
@@ -403,7 +413,7 @@ function generateHTML(s) {
         <circle cx="13" cy="134" r="10" fill="#1e3a5f" opacity=".5"/><circle cx="50" cy="134" r="10" fill="#1e3a5f" opacity=".5"/>
       </svg>
       <div style="position:absolute;bottom:-8px;left:0;right:0;text-align:center;color:#fff;font-size:9px;opacity:.5;letter-spacing:.02em">
-        Tracklink Chile Fleet Dashboard By Würfel SPA · generado automáticamente por IA
+        Flota Santa Marta · ${s.startDisplay} — ${s.endDisplay}
       </div>
     </div>
   </div>
