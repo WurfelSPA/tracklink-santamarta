@@ -57,11 +57,14 @@ jobs:
               start_str = start_override
               end_str   = end_override
           else:
-              today        = datetime.utcnow()
-              prev_monday  = today - timedelta(days=7)
-              prev_sunday  = prev_monday + timedelta(days=6)
-              start_str    = prev_monday.strftime('%Y-%m-%d')
-              end_str      = prev_sunday.strftime('%Y-%m-%d')
+              today = datetime.utcnow().date()
+              # Domingo más reciente (hoy inclusive si es domingo: weekday=6 → 0 días atrás)
+              # Lunes=0 → 1 día atrás, Martes=1 → 2, ..., Domingo=6 → 0
+              days_to_sunday = (today.weekday() + 1) % 7
+              last_sunday    = today - timedelta(days=days_to_sunday)
+              last_monday    = last_sunday - timedelta(days=6)
+              start_str      = last_monday.strftime('%Y-%m-%d')
+              end_str        = last_sunday.strftime('%Y-%m-%d')
 
           print(f"Rango: {start_str} → {end_str}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
