@@ -260,7 +260,8 @@ function generateHTML(s) {
   const peakHourLabel = s.topHours[0]?.label || '—';
   const peakHourCount = s.topHours[0]?.count || 0;
 
-  const conductorCards = s.conductoresArr.map((c, idx) => `
+  const conductorCards = s.conductoresArr.length <= 4
+    ? s.conductoresArr.map((c, idx) => `
     <div class="conductor-card ${idx===0?'c-dark':'c-light'}">
       <div class="c-name">${c.name}</div>
       <div class="c-vehicle">${c.vehicle ? `Unidad: <strong>${c.vehicle}</strong>` : `Conductor ${idx+1}`}</div>
@@ -276,7 +277,20 @@ function generateHTML(s) {
           <div class="c-stat-sub">${c.maxSpeedTime}</div>
         </div>
       </div>
-    </div>`).join('');
+    </div>`).join('')
+    : `<table class="cond-table">
+      <thead><tr><th>#</th><th>Conductor / Vehículo</th><th>Excesos</th><th>%</th><th>Vel. máx.</th><th>Hora pico</th></tr></thead>
+      <tbody>${s.conductoresArr.map((c, idx) => `
+        <tr ${idx===0?'class="ct-top"':''}>
+          <td>${idx+1}</td>
+          <td><strong>${c.name}</strong>${c.vehicle?'<br><span class="ct-veh">'+c.vehicle+'</span>':''}</td>
+          <td class="ct-num">${c.count}</td>
+          <td class="ct-pct">${c.pct}%</td>
+          <td class="ct-vel ${parseFloat(c.maxSpeed)>=60?'vel-red':parseFloat(c.maxSpeed)>=45?'vel-amb':''}">${c.maxSpeed} km/h</td>
+          <td class="ct-time">${c.maxSpeedTime}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
 
   const conducInsight = s.conductoresArr.length >= 2 ? `
     <div class="alert alert-red" style="margin-top:10px">
@@ -352,6 +366,24 @@ function generateHTML(s) {
   .c-stat-val { font-size:18px; font-weight:700; margin-bottom:2px; }
   .c-stat-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin-bottom:2px; }
   .c-stat-sub { font-size:9.5px; opacity:.65; line-height:1.3; }
+
+  /* ── Tabla compacta conductores (5+ conductores) ─────────────────────── */
+  .cond-table { width:100%; border-collapse:collapse; font-size:11px; flex:1; }
+  .cond-table thead { background:#f1f5f9; }
+  .cond-table th { font-size:9.5px; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.05em; padding:6px 8px; text-align:left; border-bottom:2px solid #e2e8f0; white-space:nowrap; }
+  .cond-table td { padding:5.5px 8px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+  .cond-table tr.ct-top td { background:#374151; color:#fff; font-weight:600; }
+  .ct-num { font-weight:700; color:#2d3748; text-align:center; }
+  .cond-table tr.ct-top .ct-num { color:#fff; }
+  .ct-pct { color:#718096; font-size:10px; text-align:center; }
+  .cond-table tr.ct-top .ct-pct { color:#94a3b8; }
+  .ct-veh { font-size:9.5px; opacity:.65; }
+  .ct-vel { font-weight:600; white-space:nowrap; }
+  .vel-red { color:#e53e3e; }
+  .vel-amb { color:#dd6b20; }
+  .cond-table tr.ct-top .vel-red,
+  .cond-table tr.ct-top .vel-amb { color:#fca5a5; }
+  .ct-time { color:#718096; font-size:9.5px; white-space:nowrap; }
 
   /* ── Página 3: Charts ────────────────────────────────────────────────── */
   .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:8px; }
