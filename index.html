@@ -488,7 +488,7 @@ function renderApp() {
   // Aplica el filtro seleccionado (por defecto "Últimos 7 días") desde la
   // primera carga, para que el rango mostrado arriba coincida con los datos
   // realmente desplegados — antes se mostraba el rango completo del Excel
-  // (hasta 60 días) aunque el filtro dijera "últimos 7 días".
+  // (hasta 90 días) aunque el filtro dijera "últimos 7 días".
   _doApplyDateFilter();
 }
 
@@ -524,7 +524,7 @@ function _doApplyDateFilter() {
   let desdeStr = '', hastaStr = ''; // "YYYY-MM-DD" para comparación de strings
 
   if (mode === 'last7') {
-    // Últimos 7 días reales respecto a hoy (no todo el histórico de 60 días
+    // Últimos 7 días reales respecto a hoy (no todo el histórico de 90 días
     // acumulado en el Excel). Ventana: [hoy-7 .. hoy-1], ambos inclusive.
     const pad2   = (n) => String(n).padStart(2, '0');
     const toISO  = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
@@ -571,7 +571,7 @@ function _doApplyDateFilter() {
   }
   document.getElementById('filterCount').textContent = G.rows.length
     ? `${G.rows.length} eventos`
-    : `⚠ Sin datos en el período consultado. Sólo últimos 60 días`;
+    : `⚠ Sin datos en el período consultado. Sólo últimos 90 días`;
 
   rebuildAggregates();
   renderFlota();

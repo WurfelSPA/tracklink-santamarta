@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * bulk_download.js — Descarga los últimos 63 días (9 ventanas de 7 días)
- * en una sola sesión de login. Guarda cada ventana como bulk_0.xlsx … bulk_8.xlsx
+ * bulk_download.js — Descarga los últimos 91 días (13 ventanas de 7 días)
+ * en una sola sesión de login. Guarda cada ventana como bulk_0.xlsx … bulk_12.xlsx
  * para que merge_history.py las fusione después.
  */
 'use strict';
@@ -11,7 +11,7 @@ const AdmZip    = require('adm-zip');
 const fs        = require('fs');
 const path      = require('path');
 
-const WINDOWS = 9;   // 9 × 7 días = 63 días de cobertura
+const WINDOWS = 13;   // 13 × 7 días = 91 días de cobertura
 
 const pad = n => String(n).padStart(2, '0');
 const fmt = d => `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`;

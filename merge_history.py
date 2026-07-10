@@ -15,7 +15,7 @@ from datetime import datetime
 
 LATEST   = 'latest.xlsx'
 HIST     = 'INFORME EXCESOS DE VELOCIDAD.xlsx'
-MAX_DAYS = 60   # ventana rodante: siempre los últimos 60 días
+MAX_DAYS = 90   # ventana rodante: siempre los últimos 90 días
 
 def get_header_row(ws, max_search=10):
     """Devuelve (row_idx, col_map) para la hoja."""

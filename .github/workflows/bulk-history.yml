@@ -1,7 +1,7 @@
-name: Bulk History Download (60 días)
+name: Bulk History Download (90 días)
 
 on:
-  workflow_dispatch:   # Solo manual — correr UNA VEZ para poblar el historial
+  workflow_dispatch:   # Manual — correr para poblar/rellenar el historial
 
 jobs:
   bulk-download:
@@ -28,7 +28,7 @@ jobs:
           npm install puppeteer adm-zip
           pip install openpyxl
 
-      - name: Download 9 ventanas de 7 días (≈ 63 días total)
+      - name: Download 13 ventanas de 7 días (≈ 91 días total)
         env:
           TL_USER:     ${{ secrets.TL_USER }}
           TL_PASSWORD: ${{ secrets.TL_PASSWORD }}
@@ -47,6 +47,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "Sin cambios."
           else
-            git commit -m "chore: carga histórica 60 días $(date -u +%Y-%m-%d)"
+            git commit -m "chore: carga histórica 90 días $(date -u +%Y-%m-%d)"
             git push
           fi
