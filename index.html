@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Consorcio Santa Marta Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Epilogue:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Epilogue:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -14,12 +14,12 @@
   background: #1a1200; border-bottom: 2px solid #f5a623;
   padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
-#configBanner .cb-text { font-size: 13px; color: #f5a623; font-family: 'Space Mono', monospace; }h
+#configBanner .cb-text { font-size: 13px; color: #f5a623; font-family: 'JetBrains Mono', monospace; }h
 #configBanner .cb-sub  { font-size: 11px; color: #8b6c1a; margin-top: 3px; }
 #configInput {
   flex: 1; max-width: 520px; background: #0d0a00; border: 1px solid #f5a623;
   border-radius: 6px; padding: 8px 12px; color: #f5d27a; font-size: 12px;
-  font-family: 'Space Mono', monospace; outline: none;
+  font-family: 'JetBrains Mono', monospace; outline: none;
 }
 #configInput::placeholder { color: #5a4a1a; }
 #configApply {
@@ -40,8 +40,8 @@
   border-top-color: #1a3a6b; border-radius: 50%; animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-#loadMsg { font-family: 'Space Mono', monospace; font-size: 13px; color: #667781; }
-#loadError { font-family: 'Space Mono', monospace; font-size: 12px; color: #f04545; max-width: 500px; text-align: center; display: none; }
+#loadMsg { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #667781; }
+#loadError { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #f04545; max-width: 500px; text-align: center; display: none; }
 #loadRetry { display: none; background: #f04545; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-weight: 700; cursor: pointer; font-family: 'Epilogue', sans-serif; font-size: 13px; }
 
 /* ── CORE THEME ── */
@@ -77,9 +77,9 @@ body{font-family:'Epilogue',sans-serif;background:var(--ink);color:var(--text);m
 .brand-mark svg{width:16px;height:16px;}
 .brand-name{font-size:15px;font-weight:800;letter-spacing:-.4px;}
 .brand-name span{color:var(--lime);}
-.client-pill{background:var(--lime-dim);border:1px solid rgba(26,58,107,.2);color:var(--lime);font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;font-family:'Space Mono',monospace;}
+.client-pill{background:var(--lime-dim);border:1px solid rgba(26,58,107,.2);color:var(--lime);font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;font-family:'JetBrains Mono',monospace;}
 .topbar-right{display:flex;align-items:center;gap:14px;}
-.period-badge{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);background:var(--ink3);border:1px solid var(--line2);padding:5px 12px;border-radius:6px;}
+.period-badge{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);background:var(--ink3);border:1px solid var(--line2);padding:5px 12px;border-radius:6px;}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--lime);animation:blink 2s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
 
@@ -93,7 +93,7 @@ body{font-family:'Epilogue',sans-serif;background:var(--ink);color:var(--text);m
 .main{padding:24px 28px;display:flex;flex-direction:column;gap:20px;max-width:1380px;margin:0 auto;width:100%;}
 
 /* SEC LABEL */
-.sec-label{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .sec-label::after{content:'';flex:1;height:1px;background:var(--line);}
 
 /* KPI */
@@ -101,8 +101,8 @@ body{font-family:'Epilogue',sans-serif;background:var(--ink);color:var(--text);m
 .kpi{background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,#1a3a6b);opacity:.5;}
 .kpi-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px;}
-.kpi-value{font-size:28px;font-weight:900;line-height:1;color:var(--kv,var(--text));font-family:'Space Mono',monospace;}
-.kpi-sub{font-size:11px;color:var(--muted2);margin-top:5px;font-family:'Space Mono',monospace;}
+.kpi-value{font-size:28px;font-weight:900;line-height:1;color:var(--kv,var(--text));font-family:'JetBrains Mono',monospace;}
+.kpi-sub{font-size:11px;color:var(--muted2);margin-top:5px;font-family:'JetBrains Mono',monospace;}
 
 /* GRID */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
@@ -113,7 +113,7 @@ body{font-family:'Epilogue',sans-serif;background:var(--ink);color:var(--text);m
 .card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
 .card-title{font-size:13px;font-weight:700;color:var(--text);}
 .card-sub{font-size:11px;color:var(--muted2);margin-bottom:14px;}
-.card-tag{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;}
+.card-tag{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;}
 .tag-red{background:var(--red-dim);color:var(--red);}
 .tag-lime{background:var(--lime-dim);color:var(--lime);}
 .tag-amber{background:var(--amber-dim);color:var(--amber);}
@@ -127,23 +127,23 @@ canvas{display:block;}
 .metric-label{font-size:12px;color:var(--muted2);width:130px;flex-shrink:0;}
 .metric-track{flex:1;height:7px;background:var(--ink3);border-radius:4px;overflow:hidden;}
 .metric-fill{height:100%;border-radius:4px;}
-.metric-val{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);width:44px;text-align:right;flex-shrink:0;}
+.metric-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);width:44px;text-align:right;flex-shrink:0;}
 
 /* RANK TABLE */
 .rank-table{width:100%;border-collapse:collapse;}
-.rank-table th{text-align:left;padding:7px 10px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;border-bottom:1px solid var(--line);font-family:'Space Mono',monospace;}
+.rank-table th{text-align:left;padding:7px 10px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;}
 .rank-table td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
 .rank-table tr:last-child td{border-bottom:none;}
 .rank-table tr:hover td{background:rgba(255,255,255,.015);}
-.rank-num{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;}
+.rank-num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;}
 .r1{background:var(--red-dim);color:var(--red);}
 .r2{background:var(--amber-dim);color:var(--amber);}
 .r3{background:var(--lime-dim);color:var(--lime);}
-.mono-sm{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);}
+.mono-sm{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);}
 
 /* DETAIL TABLE */
 .dtl-table{width:100%;border-collapse:collapse;font-size:12px;}
-.dtl-table th{text-align:left;padding:7px 10px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;border-bottom:1px solid var(--line);font-family:'Space Mono',monospace;}
+.dtl-table th{text-align:left;padding:7px 10px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;}
 .dtl-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;}
 .dtl-table tr:last-child td{border-bottom:none;}
 .dtl-table tr:hover td{background:rgba(255,255,255,.012);}
@@ -154,7 +154,7 @@ canvas{display:block;}
 .tab-view.active{display:block;}
 
 /* SELECTOR BUTTONS */
-.sel-btn{padding:9px 16px;border:1px solid var(--line2);border-radius:8px;background:transparent;color:var(--muted2);font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;font-weight:700;transition:all .15s;}
+.sel-btn{padding:9px 16px;border:1px solid var(--line2);border-radius:8px;background:transparent;color:var(--muted2);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;font-weight:700;transition:all .15s;}
 .sel-btn.active{background:var(--lime-dim);color:var(--lime);border-color:rgba(26,58,107,.3);}
 .sel-btn:hover:not(.active){border-color:var(--line2);color:var(--text);}
 
@@ -163,18 +163,18 @@ canvas{display:block;}
 .search-input:focus{border-color:var(--lime);}
 
 /* FOOTER */
-.footer{text-align:center;padding:18px 28px;color:var(--muted);font-size:11px;font-family:'Space Mono',monospace;border-top:1px solid var(--line);}
+.footer{text-align:center;padding:18px 28px;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;border-top:1px solid var(--line);}
 
 /* ── FILTER BAR ── */
 #filterBar{
   background:var(--ink2);border-bottom:1px solid var(--line);
   padding:9px 28px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
 }
-.fl-label{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;}
+.fl-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;}
 .fl-select,.fl-date{
   background:var(--ink3);border:1px solid var(--line2);border-radius:6px;
   padding:5px 10px;color:var(--text);font-size:12px;
-  font-family:'Space Mono',monospace;outline:none;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;outline:none;cursor:pointer;
 }
 .fl-select:focus,.fl-date:focus{border-color:var(--lime);}
 #filterApply{
@@ -184,7 +184,7 @@ canvas{display:block;}
 }
 #filterApply:hover{opacity:.85;}
 #filterApply:disabled{opacity:.5;cursor:not-allowed;}
-#filterCount{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
+#filterCount{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
 /* ── Progress bar ── */
 #filterProgress{
   position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;
@@ -695,10 +695,10 @@ function renderFlota() {
             <td><span class="rank-num ${i===0?'r1':i===1?'r2':'r3'}">${i+1}</span></td>
             <td><span style="font-weight:700;color:var(--text);">${c.label}</span></td>
             <td><span class="mono-sm" style="color:${c.color};">${extractPlaca(c.placa)}</span></td>
-            <td><span style="font-family:'Space Mono',monospace;font-weight:700;color:${rankColors[i]||'var(--text)'};">${c.excesos}</span></td>
+            <td><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${rankColors[i]||'var(--text)'};">${c.excesos}</span></td>
             <td><span class="mono-sm" style="color:${c.velMax>=60?'var(--red)':c.velMax>=45?'var(--amber)':'var(--muted2)'};">${c.velMax.toFixed(1)} km/h</span></td>
             <td><span class="mono-sm">${c.velProm.toFixed(1)} km/h</span></td>
-            <td style="width:200px;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--ink3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.round(c.excesos/ranking[0].excesos*100)}%;background:${c.color};border-radius:3px;"></div></div><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">${Math.round(c.excesos/ranking[0].excesos*100)}%</span></div></td>
+            <td style="width:200px;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;background:var(--ink3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.round(c.excesos/ranking[0].excesos*100)}%;background:${c.color};border-radius:3px;"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">${Math.round(c.excesos/ranking[0].excesos*100)}%</span></div></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -718,14 +718,14 @@ function renderFlota() {
               const vProm = v?.velProm || 0;
               const color = exc === 0 ? 'var(--muted2)' : PALETTE[i % PALETTE.length];
               const estado = exc === 0
-                ? `<span style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#16a34a;background:rgba(22,163,74,.10);padding:3px 8px;border-radius:4px;">SIN EXCESOS</span>`
-                : `<div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;max-width:120px;height:5px;background:var(--ink3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.round(exc/maxExc*100)}%;background:${color};border-radius:3px;"></div></div><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">${Math.round(exc/maxExc*100)}%</span></div>`;
+                ? `<span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#16a34a;background:rgba(22,163,74,.10);padding:3px 8px;border-radius:4px;">SIN EXCESOS</span>`
+                : `<div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;max-width:120px;height:5px;background:var(--ink3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.round(exc/maxExc*100)}%;background:${color};border-radius:3px;"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">${Math.round(exc/maxExc*100)}%</span></div>`;
               return `<tr>
-                <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);">${i+1}</span></td>
-                <td><span style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:${color};">${extractPlaca(alias)}</span><span style="font-size:10px;color:var(--muted2);margin-left:6px;">${alias.replace(extractPlaca(alias),'').trim()}</span></td>
-                <td><span style="font-family:'Space Mono',monospace;font-weight:700;color:${exc===0?'var(--muted2)':exc>100?'var(--red)':exc>50?'var(--amber)':'var(--lime)'};">${exc}</span></td>
-                <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:${vMax>=60?'var(--red)':vMax>=45?'var(--amber)':'var(--muted2)'};">${vMax>0?vMax.toFixed(1)+' km/h':'—'}</span></td>
-                <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${vProm>0?vProm.toFixed(1)+' km/h':'—'}</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);">${i+1}</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:${color};">${extractPlaca(alias)}</span><span style="font-size:10px;color:var(--muted2);margin-left:6px;">${alias.replace(extractPlaca(alias),'').trim()}</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${exc===0?'var(--muted2)':exc>100?'var(--red)':exc>50?'var(--amber)':'var(--lime)'};">${exc}</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${vMax>=60?'var(--red)':vMax>=45?'var(--amber)':'var(--muted2)'};">${vMax>0?vMax.toFixed(1)+' km/h':'—'}</span></td>
+                <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);">${vProm>0?vProm.toFixed(1)+' km/h':'—'}</span></td>
                 <td>${estado}</td>
               </tr>`;
             }).join('');
@@ -744,7 +744,7 @@ function renderFlota() {
     });
     activeCharts.cTend = new Chart(document.getElementById('cTend'),{
       type:'line',
-      data:{ labels:allDates.map(d=>d.substring(5)), datasets },
+      data:{ labels:allDates.map(fmtDiaMes), datasets },
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{legend:{display:false}},
         scales:{ x:chartXOpts(), y:chartYOpts() } }
@@ -758,7 +758,7 @@ function renderFlota() {
           backgroundColor:horasTot.map(v=>v>=Math.max(...horasTot)*0.8?'#f04545':v>=Math.max(...horasTot)*0.5?'#f5a623':v>0?'rgba(91,156,246,0.7)':'rgba(94,100,128,0.2)')}] },
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{legend:{display:false}},
-        scales:{ x:{ticks:{color:'#5e6480',font:{family:'Space Mono',size:8},maxRotation:45,autoSkip:false},grid:{display:false},border:{color:'transparent'}},
+        scales:{ x:{ticks:{color:'#5e6480',font:{family:'JetBrains Mono',size:8},maxRotation:45,autoSkip:false},grid:{display:false},border:{color:'transparent'}},
                  y:chartYOpts() } }
     });
 
@@ -845,13 +845,13 @@ function renderConductorPanel(name) {
                 stroke-dashoffset="${2*Math.PI*32*.25}" stroke-linecap="round"/>
             </svg>
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
-              <div style="font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:${scoreClr};">${scoreNum}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:${scoreClr};">${scoreNum}</div>
               <div style="font-size:9px;color:var(--muted);">/100</div>
             </div>
           </div>
           <div>
             <div style="font-size:20px;font-weight:900;color:var(--text);">${name}</div>
-            <div style="font-family:'Space Mono',monospace;font-size:12px;color:${c.color};margin-top:2px;">${extractPlaca(c.placa)}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${c.color};margin-top:2px;">${extractPlaca(c.placa)}</div>
             <div style="font-size:11px;color:var(--muted2);margin-top:6px;">#${rankPos} en flota · ${c.excesos} excesos</div>
           </div>
         </div>
@@ -870,8 +870,8 @@ function renderConductorPanel(name) {
             const bg=v===0?'var(--ink3)':pct>0.8?'#f04545':pct>0.5?'#f5a623':c.color;
             return `<div style="text-align:center;">
               <div style="height:${Math.max(4,pct*56)}px;background:${bg};border-radius:3px 3px 0 0;margin-bottom:3px;"></div>
-              <div style="font-size:8px;color:var(--muted);font-family:'Space Mono',monospace;">${d}</div>
-              <div style="font-size:10px;font-weight:700;color:var(--text);font-family:'Space Mono',monospace;">${v}</div>
+              <div style="font-size:8px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${d}</div>
+              <div style="font-size:10px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;">${v}</div>
             </div>`;
           }).join('')}
         </div>
@@ -899,12 +899,12 @@ function renderConductorPanel(name) {
         datasets:[{label:'Excesos',data:c.porHora,borderRadius:3,
           backgroundColor:c.porHora.map(v=>{ const mx=Math.max(...c.porHora); return v>=mx*.8?'#f04545':v>=mx*.5?'#f5a623':v>0?c.color:'rgba(94,100,128,0.2)'; })}] },
       options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-        scales:{ x:{ticks:{color:'#5e6480',font:{family:'Space Mono',size:8},maxRotation:45,autoSkip:false},grid:{display:false},border:{color:'transparent'}}, y:chartYOpts() } }
+        scales:{ x:{ticks:{color:'#5e6480',font:{family:'JetBrains Mono',size:8},maxRotation:45,autoSkip:false},grid:{display:false},border:{color:'transparent'}}, y:chartYOpts() } }
     });
     const tDates = c.dates;
     activeCharts.cCTend = new Chart(document.getElementById('cCTend'),{
       type:'line',
-      data:{ labels:tDates.map(d=>d.substring(5)),
+      data:{ labels:tDates.map(fmtDiaMes),
         datasets:[{label:'Excesos',data:tDates.map(d=>c.byDate[d]||0),borderColor:c.color,backgroundColor:`${c.color}15`,borderWidth:2,pointRadius:5,pointBackgroundColor:c.color,fill:true,tension:0.3}] },
       options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
         scales:{ x:chartXOpts(), y:chartYOpts({min:0}) } }
@@ -949,7 +949,7 @@ function renderVehiclePanel(alias) {
     <div class="grid3">
       <div class="card">
         <div class="sec-label" style="font-size:9px;margin-bottom:10px;">Ficha del vehículo</div>
-        <div style="font-size:22px;font-weight:900;font-family:'Space Mono',monospace;color:${v.color};margin-bottom:4px;">${v.placa}</div>
+        <div style="font-size:22px;font-weight:900;font-family:'JetBrains Mono',monospace;color:${v.color};margin-bottom:4px;">${v.placa}</div>
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;">${alias}</div>
         <div style="font-size:12px;color:var(--muted2);margin-bottom:14px;">Conductor: <span style="color:var(--text);font-weight:600;">${v.conductor}</span></div>
         <div class="metric-row"><span class="metric-label">Total excesos</span><div class="metric-track"><div class="metric-fill" style="width:${Math.round(v.excesos/ranking[0].excesos*100)}%;background:${v.color};"></div></div><span class="metric-val">${v.excesos}</span></div>
@@ -964,8 +964,8 @@ function renderVehiclePanel(alias) {
             const bg=val===0?'var(--ink3)':pct>0.8?'#f04545':pct>0.5?'#f5a623':v.color;
             return `<div style="text-align:center;">
               <div style="height:${Math.max(4,pct*80)}px;background:${bg};border-radius:4px 4px 0 0;margin-bottom:5px;"></div>
-              <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;">${d}</div>
-              <div style="font-size:13px;font-weight:700;color:var(--text);font-family:'Space Mono',monospace;">${val}</div>
+              <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${d}</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;">${val}</div>
             </div>`;
           }).join('')}
         </div>
@@ -988,9 +988,9 @@ function renderVehiclePanel(alias) {
         <tbody>
           ${ranking.map((vv,i)=>`<tr style="${vv.label===alias?'background:rgba(255,255,255,.025);':''}">
             <td><span class="rank-num ${i===0?'r1':i===1?'r2':'r3'}">${i+1}</span></td>
-            <td><span style="font-family:'Space Mono',monospace;font-weight:700;font-size:11px;color:${vv.color};">${vv.placa}</span>${vv.label===alias?' <span style="font-size:10px;color:var(--muted);">◀</span>':''}</td>
+            <td><span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:${vv.color};">${vv.placa}</span>${vv.label===alias?' <span style="font-size:10px;color:var(--muted);">◀</span>':''}</td>
             <td><span style="font-size:13px;font-weight:${vv.label===alias?700:400};color:${vv.label===alias?'var(--text)':'var(--muted2)'};">${vv.conductor}</span></td>
-            <td><span style="font-family:'Space Mono',monospace;font-weight:700;color:${i===0?'var(--red)':i===1?'var(--amber)':'var(--lime)'};">${vv.excesos}</span></td>
+            <td><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${i===0?'var(--red)':i===1?'var(--amber)':'var(--lime)'};">${vv.excesos}</span></td>
             <td><span class="mono-sm" style="color:${vv.velMax>=60?'var(--red)':vv.velMax>=45?'var(--amber)':'var(--muted2)'};">${vv.velMax.toFixed(1)} km/h</span></td>
             <td><span class="mono-sm">${vv.velProm.toFixed(1)} km/h</span></td>
           </tr>`).join('')}
@@ -1006,11 +1006,11 @@ function renderVehiclePanel(alias) {
         datasets:[{label:'Excesos',data:v.porHora,borderRadius:3,
           backgroundColor:v.porHora.map(hv=>{ const mx=Math.max(...v.porHora); return hv>=mx*.8?'#f04545':hv>=mx*.5?'#f5a623':hv>0?v.color:'rgba(94,100,128,0.2)'; })}] },
       options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-        scales:{ x:{ticks:{color:'#5e6480',font:{family:'Space Mono',size:8},maxRotation:45,autoSkip:false},grid:{display:false},border:{color:'transparent'}},y:chartYOpts() } }
+        scales:{ x:{ticks:{color:'#5e6480',font:{family:'JetBrains Mono',size:8},maxRotation:45,autoSkip:false},grid:{display:false},border:{color:'transparent'}},y:chartYOpts() } }
     });
     activeCharts.cVTend = new Chart(document.getElementById('cVTend'),{
       type:'line',
-      data:{ labels:v.dates.map(d=>d.substring(5)),
+      data:{ labels:v.dates.map(fmtDiaMes),
         datasets:[{label:'Excesos',data:v.dates.map(d=>v.byDate[d]||0),borderColor:v.color,backgroundColor:`${v.color}15`,borderWidth:2,pointRadius:5,pointBackgroundColor:v.color,fill:true,tension:0.3}] },
       options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
         scales:{ x:chartXOpts(), y:chartYOpts({min:0}) } }
@@ -1057,14 +1057,14 @@ function renderDetailRows(rows) {
     const fechaStr = r.fecha ? r.fecha.toLocaleDateString('es-CL') : '—';
     const horaStr  = r.fecha ? r.fecha.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}) : '—';
     return `<tr>
-      <td><span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">${String(i+1).padStart(3,'0')}</span></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">${String(i+1).padStart(3,'0')}</span></td>
       <td><span style="font-weight:600;color:${cClr};">${r.cond}</span></td>
-      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--lime);">${extractPlaca(r.alias)}</span></td>
-      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${fechaStr}</span></td>
-      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${horaStr}</span></td>
-      <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:${bW}%;height:4px;border-radius:2px;background:${bC};min-width:4px;"></div><span style="font-family:'Space Mono',monospace;font-size:11px;color:${clr};font-weight:700;">${r.velMax.toFixed(1)}</span></div></td>
-      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${r.velProm.toFixed(1)}</span></td>
-      <td><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);">${r.tiempo}</span></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--lime);">${extractPlaca(r.alias)}</span></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);">${fechaStr}</span></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);">${horaStr}</span></td>
+      <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:${bW}%;height:4px;border-radius:2px;background:${bC};min-width:4px;"></div><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${clr};font-weight:700;">${r.velMax.toFixed(1)}</span></div></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);">${r.velProm.toFixed(1)}</span></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted2);">${r.tiempo}</span></td>
       <td><span style="font-size:11px;color:var(--muted2);">${r.dirIni}</span></td>
     </tr>`;
   }).join('');
@@ -1086,10 +1086,10 @@ function showTab(id, btn) {
 function destroyCharts(ids) {
   ids.forEach(id=>{ if(activeCharts[id]){activeCharts[id].destroy();delete activeCharts[id];} });
 }
-function chartXOpts(extra={}) { return {ticks:{color:'#5e6480',font:{family:'Space Mono',size:10}},grid:{color:'rgba(255,255,255,0.03)'},border:{color:'transparent'},...extra}; }
-function chartXOptsRaw(extra={}) { return {ticks:{color:'#5e6480',font:{family:'Space Mono',size:9}},grid:{display:false},border:{color:'transparent'},...extra}; }
-function chartYOpts(extra={}) { return {ticks:{color:'#5e6480',font:{family:'Space Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'transparent'},...extra}; }
-function chartYOptsRaw(extra={}) { return {ticks:{color:'#5e6480',font:{family:'Space Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'transparent'},...extra}; }
+function chartXOpts(extra={}) { return {ticks:{color:'#5e6480',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.03)'},border:{color:'transparent'},...extra}; }
+function chartXOptsRaw(extra={}) { return {ticks:{color:'#5e6480',font:{family:'JetBrains Mono',size:9}},grid:{display:false},border:{color:'transparent'},...extra}; }
+function chartYOpts(extra={}) { return {ticks:{color:'#5e6480',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'transparent'},...extra}; }
+function chartYOptsRaw(extra={}) { return {ticks:{color:'#5e6480',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'transparent'},...extra}; }
 
 function extractPlaca(alias) {
   const m = alias.match(/[A-Z]{2,4}[\s-]?\d{2,3}|[A-Z]{4}-\d{2}/);
@@ -1100,6 +1100,11 @@ function limpiarDir(dir) {
 }
 function titleCase(str) {
   return str.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+}
+function fmtDiaMes(isoStr) {
+  // "YYYY-MM-DD" → "DD-MM" (formato chileno para ejes de gráficos)
+  const s = String(isoStr);
+  return s.substring(8,10) + '-' + s.substring(5,7);
 }
 function fmtDate(isoStr) {
   try {
