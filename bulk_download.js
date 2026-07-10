@@ -22,7 +22,7 @@ async function fetchWindow(page, startDate, endDate, label) {
     const h    = JSONUSER.hash;
     const body = JSON.stringify({
       startDate, endDate,
-      unitIds:             '4349,6399,4436',
+      unitIds:             '4349,4436,6399,6566,6570,6571,6572,6573,6574',
       reportName:          'INFORME EXCESOS DE VELOCIDAD',
       parameters:          'undefined',
       userTimeZone:        -4,
