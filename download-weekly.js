@@ -79,7 +79,7 @@ async function main() {
       const body = JSON.stringify({
         startDate,
         endDate,
-        unitIds:             '4349,4436,6399,6566,6570,6571,6572,6573,6574',
+        unitIds:             '4349,4435,4436,6399,6566,6570,6571,6572,6573,6574',
         reportName:          'INFORME EXCESOS DE VELOCIDAD',
         parameters:          'undefined',
         userTimeZone:        -4,
