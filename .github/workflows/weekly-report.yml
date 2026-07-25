@@ -2,7 +2,12 @@
 # GitHub Action: Descarga semanal + Generación automática de PDF
 # Flota Santa Marta — Tracklink Chile
 #
-# Corre cada domingo a las 23:30 CLT (03:30 UTC del lunes siguiente).
+# Corre cada lunes a la 01:00 CLT (05:00 UTC).
+# Se corre con margen después de medianoche (y no el domingo 23:30 CLT como
+# antes) para dar tiempo a que TrackGTS termine de asentar los datos de los
+# últimos minutos del domingo: su healthcheck/actualización de base de datos
+# tiene un ciclo de ~20 min, así que pedir el reporte justo al cierre de la
+# semana podía dejar fuera los últimos excesos de velocidad del domingo.
 # Flujo completo:
 #   1. Descarga datos TrackGTS para Lun–Dom de la semana anterior
 #   2. Fusiona con historial (merge_history.py)
@@ -19,8 +24,8 @@ name: Descarga y Reporte Semanal
 
 on:
   schedule:
-    # 03:30 UTC = 23:30 CLT (UTC-4) cada domingo
-    - cron: '30 3 * * 1'
+    # 05:00 UTC = 01:00 CLT (UTC-4) cada lunes
+    - cron: '0 5 * * 1'
 
   # Ejecución manual desde GitHub Actions (útil para pruebas)
   workflow_dispatch:
@@ -66,11 +71,24 @@ jobs:
               start_str      = last_monday.strftime('%Y-%m-%d')
               end_str        = last_sunday.strftime('%Y-%m-%d')
 
-          print(f"Rango: {start_str} → {end_str}")
+          # Ventana de descarga a TrackGTS: se pide con 7 días extra de margen
+          # hacia atrás (14 días en total) para volver a traer la semana previa.
+          # merge_history.py dedupea por Alias+Fecha de Inicio, así que las filas
+          # ya existentes simplemente se descartan — pero si algún registro llegó
+          # tarde a TrackGTS (telemetría GPS rezagada de un dispositivo que estuvo
+          # offline) esta corrida lo capta y el histórico se autocorrige, aunque
+          # el reporte de esa semana ya se haya enviado.
+          # REPORT_START/REPORT_END (para el PDF) siguen acotados a la semana
+          # objetivo — este margen extra es solo para la descarga.
+          EXTRA_DAYS = 7
+          tl_start_date = (datetime.strptime(start_str, '%Y-%m-%d') - timedelta(days=EXTRA_DAYS)).date()
+
+          print(f"Rango PDF: {start_str} → {end_str}")
+          print(f"Rango descarga TrackGTS (con margen): {tl_start_date} → {end_str}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f"start={start_str}\n")
               f.write(f"end={end_str}\n")
-              f.write(f"tl_start={start_str.replace('-','/')} 00:00:00\n")
+              f.write(f"tl_start={tl_start_date.strftime('%Y/%m/%d')} 00:00:00\n")
               f.write(f"tl_end={end_str.replace('-','/')} 23:59:59\n")
           EOF
         env:
