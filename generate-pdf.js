@@ -532,7 +532,7 @@ function generateHTML(s) {
   .cover{display:flex;width:100%;height:100%;}
   .cv-left{width:44%;height:100%;background:linear-gradient(150deg,#1a2b45 0%,#22406f 45%,#0f1e34 100%);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
   .cv-right{width:56%;height:100%;padding:64px 56px;display:flex;flex-direction:column;justify-content:center;gap:20px;}
-  .cv-eyebrow{display:flex;align-items:center;gap:16px;margin-bottom:6px;}
+  .cv-eyebrow{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:14px;}
   .cv-title{font-size:46px;font-weight:800;color:#1a202c;line-height:1.15;}
   .cv-sub{font-size:18.5px;font-weight:600;color:#4a5568;}
   .cv-desc{font-size:17px;color:#718096;line-height:1.65;max-width:580px;}
@@ -603,7 +603,7 @@ function generateHTML(s) {
   </div>
   <div class="cv-right">
     <div class="cv-eyebrow">
-      <img src="https://raw.githubusercontent.com/WurfelSPA/tracklink-santamarta/main/logo.png" style="height:100px;width:auto;object-fit:contain;" alt="">
+      <img src="https://raw.githubusercontent.com/WurfelSPA/tracklink-santamarta/main/logo.png" style="height:140px;width:auto;object-fit:contain;" alt="">
     </div>
     <h1 class="cv-title">Reporte de Excesos de Velocidad</h1>
     <p class="cv-sub">${SITE_NAME} · Período: ${s.rangeVerbose}</p>
