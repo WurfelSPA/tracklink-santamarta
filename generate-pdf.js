@@ -482,6 +482,16 @@ function generateHTML(s) {
     </tr>`;
   }).join('');
 
+  // La tabla de conductores tiene largo variable (uno por conductor activo);
+  // se reduce el tamaño de fila cuando hay muchos para que siempre quepa junto
+  // con la nota final, sin invadir el pie de página.
+  const condN = s.conductoresArr.length || 1;
+  let condPadY, condFontSize;
+  if (condN <= 8)       { condPadY = 10; condFontSize = 15.5; }
+  else if (condN <= 11) { condPadY = 6;  condFontSize = 14;   }
+  else if (condN <= 15) { condPadY = 3;  condFontSize = 12;   }
+  else                  { condPadY = 2;  condFontSize = 11;   }
+
   const top3Names = s.conductoresArr.slice(0, 3).map((c) => c.name);
   const top3Text  = top3Names.length >= 2
     ? `${top3Names.slice(0, -1).join(', ')} y ${top3Names[top3Names.length - 1]}`
@@ -554,9 +564,9 @@ function generateHTML(s) {
   .p3-chart{flex:1 1 56%;}
   .p3-table-wrap{flex:1 1 44%;display:flex;flex-direction:column;min-height:0;}
   .cond-table-scroll{flex:1 1 auto;min-height:0;overflow:hidden;}
-  table.cond-table{width:100%;border-collapse:collapse;font-size:15.5px;}
+  table.cond-table{width:100%;border-collapse:collapse;font-size:${condFontSize}px;}
   .cond-table thead th{font-size:14px;font-weight:700;color:#fff;background:#374151;text-align:left;padding:11px 12px;}
-  .cond-table td{padding:10px 12px;border-bottom:1px solid #edf2f7;color:#334155;}
+  .cond-table td{padding:${condPadY}px 12px;border-bottom:1px solid #edf2f7;color:#334155;}
   .cond-table td.num{font-weight:600;}
   .cond-table tr.row-max td{font-weight:800;color:#1a202c;}
   .p3-note{font-size:15px;color:#718096;line-height:1.6;margin-top:14px;flex-shrink:0;}
