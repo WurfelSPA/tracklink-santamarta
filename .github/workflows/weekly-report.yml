@@ -40,7 +40,7 @@ on:
 jobs:
   generar-reporte:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       # ── Checkout ────────────────────────────────────────────────────────────
@@ -81,24 +81,38 @@ jobs:
           #    userTimeZone para mostrar "Fecha de Inicio" en hora local; nuestro
           #    script mandaba las fechas literales sin este ajuste, lo que
           #    recortaba ~4h al inicio y al final de cada semana pedida.
-          # 2) Margen de 7 días extra hacia atrás para volver a traer la semana
-          #    previa: merge_history.py dedupea por Alias+Fecha de Inicio, así
-          #    que las filas ya existentes se descartan, pero si algún registro
-          #    llegó tarde a TrackGTS (telemetría GPS rezagada) esta corrida lo
-          #    capta y el histórico se autocorrige.
+          # 2) Se piden DOS ventanas de 7 días cada una (semana objetivo + semana
+          #    previa) en vez de una sola de 14 días. Ni download.js ni
+          #    bulk_download.js piden nunca más de 7 días por llamada, y el
+          #    propio portal tampoco — el endpoint se llama
+          #    "GetSpeedingReportByUnitsPagesZip" y no descartamos que exista
+          #    un límite de páginas/filas por consulta que una ventana de 14
+          #    días alcance a tocar. merge_history.py dedupea por
+          #    Alias+Fecha de Inicio, así que la semana previa se vuelve a
+          #    traer como red de seguridad: si algún registro llegó tarde a
+          #    TrackGTS (telemetría GPS rezagada), esta corrida lo capta y el
+          #    histórico se autocorrige.
           # REPORT_START/REPORT_END (para el PDF) siguen acotados a la semana
           # objetivo — estos ajustes son solo para la descarga a TrackGTS.
-          EXTRA_DAYS = 7
-          tl_start_date = (datetime.strptime(start_str, '%Y-%m-%d') - timedelta(days=EXTRA_DAYS)).date()
-          tl_end_date_plus1 = datetime.strptime(end_str, '%Y-%m-%d').date() + timedelta(days=1)
+          cur_start        = datetime.strptime(start_str, '%Y-%m-%d').date()
+          cur_end_plus1    = datetime.strptime(end_str, '%Y-%m-%d').date() + timedelta(days=1)
+          prev_start       = cur_start - timedelta(days=7)
+
+          tl_start      = f"{cur_start.strftime('%Y/%m/%d')} 04:00:00"
+          tl_end        = f"{cur_end_plus1.strftime('%Y/%m/%d')} 03:59:59"
+          tl_start_prev = f"{prev_start.strftime('%Y/%m/%d')} 04:00:00"
+          tl_end_prev   = f"{cur_start.strftime('%Y/%m/%d')} 03:59:59"
 
           print(f"Rango PDF: {start_str} → {end_str}")
-          print(f"Rango descarga TrackGTS (con margen y offset +4h): {tl_start_date} 04:00:00 → {tl_end_date_plus1} 03:59:59")
+          print(f"Ventana TrackGTS (semana objetivo): {tl_start} → {tl_end}")
+          print(f"Ventana TrackGTS (semana previa, red de seguridad): {tl_start_prev} → {tl_end_prev}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f"start={start_str}\n")
               f.write(f"end={end_str}\n")
-              f.write(f"tl_start={tl_start_date.strftime('%Y/%m/%d')} 04:00:00\n")
-              f.write(f"tl_end={tl_end_date_plus1.strftime('%Y/%m/%d')} 03:59:59\n")
+              f.write(f"tl_start={tl_start}\n")
+              f.write(f"tl_end={tl_end}\n")
+              f.write(f"tl_start_prev={tl_start_prev}\n")
+              f.write(f"tl_end_prev={tl_end_prev}\n")
           EOF
         env:
           INPUT_OVERRIDE_START: ${{ github.event.inputs.override_start }}
@@ -114,15 +128,26 @@ jobs:
         run: npm install puppeteer adm-zip xlsx
         timeout-minutes: 5
 
-      # ── Descargar datos de TrackGTS ──────────────────────────────────────────
-      - name: Descargar reporte TrackGTS
+      # ── Descargar datos de TrackGTS (dos ventanas de 7 días separadas: ───────
+      #    semana previa como red de seguridad + semana objetivo) ─────────────
+      - name: Descargar semana previa (red de seguridad)
+        env:
+          TL_USER:     ${{ secrets.TL_USER }}
+          TL_PASSWORD: ${{ secrets.TL_PASSWORD }}
+          TL_DOMAIN:   ${{ secrets.TL_DOMAIN }}
+          TL_START:    ${{ steps.dates.outputs.tl_start_prev }}
+          TL_END:      ${{ steps.dates.outputs.tl_end_prev }}
+        run: node download-weekly.js && mv latest.xlsx bulk_0.xlsx
+        timeout-minutes: 8
+
+      - name: Descargar semana objetivo
         env:
           TL_USER:     ${{ secrets.TL_USER }}
           TL_PASSWORD: ${{ secrets.TL_PASSWORD }}
           TL_DOMAIN:   ${{ secrets.TL_DOMAIN }}
           TL_START:    ${{ steps.dates.outputs.tl_start }}
           TL_END:      ${{ steps.dates.outputs.tl_end }}
-        run: node download-weekly.js
+        run: node download-weekly.js && mv latest.xlsx bulk_1.xlsx
         timeout-minutes: 8
 
       # ── Fusionar con historial ───────────────────────────────────────────────
