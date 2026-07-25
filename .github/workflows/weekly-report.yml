@@ -71,25 +71,34 @@ jobs:
               start_str      = last_monday.strftime('%Y-%m-%d')
               end_str        = last_sunday.strftime('%Y-%m-%d')
 
-          # Ventana de descarga a TrackGTS: se pide con 7 días extra de margen
-          # hacia atrás (14 días en total) para volver a traer la semana previa.
-          # merge_history.py dedupea por Alias+Fecha de Inicio, así que las filas
-          # ya existentes simplemente se descartan — pero si algún registro llegó
-          # tarde a TrackGTS (telemetría GPS rezagada de un dispositivo que estuvo
-          # offline) esta corrida lo capta y el histórico se autocorrige, aunque
-          # el reporte de esa semana ya se haya enviado.
+          # Ventana de descarga a TrackGTS.
+          #
+          # 1) Offset +4h confirmado inspeccionando la petición real que hace
+          #    el propio portal de TrackGTS (Network tab): para pedir el rango
+          #    local 13/07 00:00 -> 19/07 23:59 (CLT), el portal envía
+          #    startDate="2026/07/13 04:00:00" y endDate="2026/07/20 03:59:59"
+          #    (día siguiente). TrackGTS guarda/filtra en UTC y solo usa
+          #    userTimeZone para mostrar "Fecha de Inicio" en hora local; nuestro
+          #    script mandaba las fechas literales sin este ajuste, lo que
+          #    recortaba ~4h al inicio y al final de cada semana pedida.
+          # 2) Margen de 7 días extra hacia atrás para volver a traer la semana
+          #    previa: merge_history.py dedupea por Alias+Fecha de Inicio, así
+          #    que las filas ya existentes se descartan, pero si algún registro
+          #    llegó tarde a TrackGTS (telemetría GPS rezagada) esta corrida lo
+          #    capta y el histórico se autocorrige.
           # REPORT_START/REPORT_END (para el PDF) siguen acotados a la semana
-          # objetivo — este margen extra es solo para la descarga.
+          # objetivo — estos ajustes son solo para la descarga a TrackGTS.
           EXTRA_DAYS = 7
           tl_start_date = (datetime.strptime(start_str, '%Y-%m-%d') - timedelta(days=EXTRA_DAYS)).date()
+          tl_end_date_plus1 = datetime.strptime(end_str, '%Y-%m-%d').date() + timedelta(days=1)
 
           print(f"Rango PDF: {start_str} → {end_str}")
-          print(f"Rango descarga TrackGTS (con margen): {tl_start_date} → {end_str}")
+          print(f"Rango descarga TrackGTS (con margen y offset +4h): {tl_start_date} 04:00:00 → {tl_end_date_plus1} 03:59:59")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f"start={start_str}\n")
               f.write(f"end={end_str}\n")
-              f.write(f"tl_start={tl_start_date.strftime('%Y/%m/%d')} 00:00:00\n")
-              f.write(f"tl_end={end_str.replace('-','/')} 23:59:59\n")
+              f.write(f"tl_start={tl_start_date.strftime('%Y/%m/%d')} 04:00:00\n")
+              f.write(f"tl_end={tl_end_date_plus1.strftime('%Y/%m/%d')} 03:59:59\n")
           EOF
         env:
           INPUT_OVERRIDE_START: ${{ github.event.inputs.override_start }}
