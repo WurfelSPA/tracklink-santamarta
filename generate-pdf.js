@@ -467,7 +467,7 @@ function verticalBarChart(items, { width, height, showValueLabels = false, peakB
 // HTML — 5 páginas 1280×720 (16:9), una sección por página
 // ─────────────────────────────────────────────────────────────────────────────
 function generateHTML(s) {
-  const footer = `<div class="tl-footer">Tracklink Chile Fleet Dashboard · Würfel SPA · ${SITE_NAME} · ${s.startDisplay} — ${s.endDisplay}</div>`;
+  const footer = `<div class="tl-footer">Tracklink Chile Fleet Dashboard · Consorcio Santa Marta · ${SITE_NAME} · ${s.startDisplay} — ${s.endDisplay}</div>`;
 
   // ── Página 3: gráfico + tabla de conductores ──────────────────────────
   const conductorChartItems = s.conductoresArr.map((c) => ({ label: c.nameUpper, value: c.count }));
@@ -552,13 +552,14 @@ function generateHTML(s) {
   /* Página 3 */
   .p3-row{display:flex;gap:32px;flex:1;min-height:0;align-items:stretch;}
   .p3-chart{flex:1 1 56%;}
-  .p3-table-wrap{flex:1 1 44%;display:flex;flex-direction:column;}
+  .p3-table-wrap{flex:1 1 44%;display:flex;flex-direction:column;min-height:0;}
+  .cond-table-scroll{flex:1 1 auto;min-height:0;overflow:hidden;}
   table.cond-table{width:100%;border-collapse:collapse;font-size:15.5px;}
   .cond-table thead th{font-size:14px;font-weight:700;color:#fff;background:#374151;text-align:left;padding:11px 12px;}
   .cond-table td{padding:10px 12px;border-bottom:1px solid #edf2f7;color:#334155;}
   .cond-table td.num{font-weight:600;}
   .cond-table tr.row-max td{font-weight:800;color:#1a202c;}
-  .p3-note{font-size:15px;color:#718096;line-height:1.6;margin-top:14px;}
+  .p3-note{font-size:15px;color:#718096;line-height:1.6;margin-top:14px;flex-shrink:0;}
 
   /* Página 4 */
   .p4-chart-wrap{flex:1;display:flex;align-items:center;}
@@ -596,7 +597,7 @@ function generateHTML(s) {
     </div>
     <h1 class="cv-title">Reporte de Excesos de Velocidad</h1>
     <p class="cv-sub">${SITE_NAME} · Período: ${s.rangeVerbose}</p>
-    <p class="cv-desc">Durante la semana analizada se registraron un total de <strong>${s.totalIncidencias} excesos de velocidad</strong> en la flota vehicular de ${SITE_NAME.toLowerCase()}. Este reporte presenta un análisis detallado por conductor, franja horaria y día de la semana, con el objetivo de identificar patrones de riesgo y apoyar la toma de decisiones en materia de seguridad vial operacional.</p>
+    <p class="cv-desc">Durante la semana analizada se registraron un total de <strong>${s.totalIncidencias} excesos de velocidad</strong> en la flota vehicular de ${SITE_NAME}. Este reporte presenta un análisis detallado por conductor, franja horaria y día de la semana, con el objetivo de identificar patrones de riesgo y apoyar la toma de decisiones en materia de seguridad vial operacional.</p>
   </div>
 </div>
 
@@ -621,7 +622,7 @@ function generateHTML(s) {
   <div class="p3-row">
     <div class="p3-chart">${conductorChartSvg}</div>
     <div class="p3-table-wrap">
-      <table class="cond-table"><thead><tr><th>Conductor</th><th>Unidad</th><th>Vel. Máx.</th></tr></thead><tbody>${tableRows}</tbody></table>
+      <div class="cond-table-scroll"><table class="cond-table"><thead><tr><th>Conductor</th><th>Unidad</th><th>Vel. Máx.</th></tr></thead><tbody>${tableRows}</tbody></table></div>
       <p class="p3-note">${s.globalMaxConductor} registró la velocidad puntual más alta del período (${fmtSpeed(s.globalMaxSpeed)} km/h), ${s.globalMaxRank > 0 ? `${s.globalMaxRank <= 3 ? 'ubicándose' : 'a pesar de ubicarse'} en el ${ordinal(s.globalMaxRank)} lugar por volumen de excesos.` : ''}</p>
     </div>
   </div>
