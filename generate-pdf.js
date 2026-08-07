@@ -605,7 +605,7 @@ function generateHTML(s) {
     <div class="cv-eyebrow">
       <img src="https://raw.githubusercontent.com/WurfelSPA/tracklink-santamarta/main/logo.png" style="height:140px;width:auto;object-fit:contain;" alt="">
     </div>
-    <h1 class="cv-title">Reporte de Excesos de Velocidad</h1>
+    <h1 class="cv-title">Informe Ejecutivo — Excesos de Velocidad</h1>
     <p class="cv-sub">${SITE_NAME} · Período: ${s.rangeVerbose}</p>
     <p class="cv-desc">Durante la semana analizada se registraron un total de <strong>${s.totalIncidencias} excesos de velocidad</strong> en la flota vehicular de ${SITE_NAME}. Este reporte presenta un análisis detallado por conductor, franja horaria y día de la semana, con el objetivo de identificar patrones de riesgo y apoyar la toma de decisiones en materia de seguridad vial operacional.</p>
   </div>
