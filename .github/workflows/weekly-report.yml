@@ -40,7 +40,13 @@ on:
 jobs:
   generar-reporte:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Subido de 30 a 120: download-weekly.js ahora reintenta el login hasta
+    # 4 veces con 7 min de espera entre intentos (posible rate-limit de
+    # cuenta en TrackGTS, mismo comportamiento confirmado en Kadel/Enerfrost
+    # el 2026-08-07) — peor caso ~23 min por descarga, x2 descargas en este
+    # job. Aun con 120 min de margen sobra tiempo antes del envío de n8n
+    # (lunes 07:00 CLT, 6h después).
+    timeout-minutes: 120
 
     steps:
       # ── Checkout ────────────────────────────────────────────────────────────
@@ -138,7 +144,7 @@ jobs:
           TL_START:    ${{ steps.dates.outputs.tl_start_prev }}
           TL_END:      ${{ steps.dates.outputs.tl_end_prev }}
         run: node download-weekly.js && mv latest.xlsx bulk_0.xlsx
-        timeout-minutes: 8
+        timeout-minutes: 30
 
       - name: Descargar semana objetivo
         env:
@@ -148,7 +154,7 @@ jobs:
           TL_START:    ${{ steps.dates.outputs.tl_start }}
           TL_END:      ${{ steps.dates.outputs.tl_end }}
         run: node download-weekly.js && mv latest.xlsx bulk_1.xlsx
-        timeout-minutes: 8
+        timeout-minutes: 30
 
       # ── Fusionar con historial ───────────────────────────────────────────────
       - name: Setup Python
