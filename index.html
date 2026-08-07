@@ -240,6 +240,7 @@ canvas{display:block;}
   <button class="tab-btn" onclick="showTab('conductor',this)">Por Conductor</button>
   <button class="tab-btn" onclick="showTab('vehiculo',this)">Por Vehículo</button>
   <button class="tab-btn" onclick="showTab('detalle',this)">Detalle de Eventos</button>
+  <button class="tab-btn" onclick="showTab('reportes',this)">Reportes</button>
 </nav>
 
 <!-- FILTER BAR -->
@@ -264,6 +265,32 @@ canvas{display:block;}
 <div id="tab-conductor" class="tab-view"></div>
 <div id="tab-vehiculo"  class="tab-view"></div>
 <div id="tab-detalle"   class="tab-view"></div>
+<div id="tab-reportes"  class="tab-view">
+  <div class="main">
+    <div>
+      <div class="sec-label">Documentos disponibles</div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head">
+            <div><div class="card-title">Excesos de Velocidad</div><div class="card-sub">Se actualiza cada lunes</div></div>
+            <span class="card-tag tag-amber">SEMANAL</span>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+            <a class="sel-btn" style="text-decoration:none;display:inline-block;" href="https://raw.githubusercontent.com/WurfelSPA/tracklink-santamarta/main/INFORME%20EXCESOS%20DE%20VELOCIDAD.xlsx" download>📊 Reporte (Excel)</a>
+            <a class="sel-btn" style="text-decoration:none;display:inline-block;" href="https://raw.githubusercontent.com/WurfelSPA/tracklink-santamarta/main/reporte-semanal.pdf" download>📄 Informe Ejecutivo (PDF)</a>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <div class="card-title" style="margin-bottom:8px;">Glosario</div>
+        <div class="card-sub" style="line-height:1.7;">
+          <strong style="color:var(--text);">Reporte</strong> — archivo Excel generado desde la plataforma, con el detalle y los datos base de los eventos.<br>
+          <strong style="color:var(--text);">Informe Ejecutivo</strong> — documento PDF elaborado a partir del Reporte, con indicadores, análisis, gráficos, conclusiones y recomendaciones.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <footer class="footer" id="appFooter" style="display:none;">
   Tracklink Chile Fleet Dashboard By Würfel SPA · <span id="footerText"></span>
