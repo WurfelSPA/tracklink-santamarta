@@ -134,11 +134,18 @@ function parseAndFilter(buffer, startDate, endDate) {
     const ts = fecha.getTime();
     if (ts < startTs || ts > endTs) continue;
 
+    const velVal = parseFloat(String(obj[columns.velocidad] || '0').replace(',', '.')) || 0;
+    // Red de seguridad: por encima de esto es GPS/sensor fallado, no un exceso
+    // real (confirmado 2026-08-08 en Enerfrost: una unidad acumuló decenas de
+    // lecturas de 177-374 km/h que TrackGTS ya no reporta — se descartan para
+    // que no inflen el conteo semanal sin que nadie lo note).
+    if (velVal > 200) continue;
+
     const aliasVal     = String(obj[columns.alias] || '').trim();
     const conductorRaw = columns.conductor ? String(obj[columns.conductor] || '').trim() : '';
 
     obj['__fecha']     = fecha;
-    obj['__vel']       = parseFloat(String(obj[columns.velocidad] || '0').replace(',', '.')) || 0;
+    obj['__vel']       = velVal;
     obj['__alias']     = aliasVal;
     // Si no hay nombre de conductor, se usa el alias del vehículo (instrucción del prompt original)
     // y se marca para no formatearlo como si fuera un nombre de persona.
